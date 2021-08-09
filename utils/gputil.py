@@ -4,7 +4,7 @@ import time
 
 # Define function
 def mem_report():
-  print 'CPU RAM Free: ' + humanize.naturalsize( psutil.virtual_memory().available ) , '               |', 'CPU_Utilization ' ,  psutil.cpu_percent(),'%'
+  print "CPU RAM Free: " + humanize.naturalsize( psutil.virtual_memory().available ) , '               |', 'CPU_Utilization ' ,  psutil.cpu_percent(),'%'
   #print('CPU      ... RAM Free: {:}MB | Utilization {:}'.format(psutil.virtual_memory().available, psutil.cpu_percent()))
   GPUs = GPUtil.getGPUs()
   for i, gpu in enumerate(GPUs):

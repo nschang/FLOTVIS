@@ -1,6 +1,6 @@
-'''
+# -----------------------------------------------------------
 # modified from https://github.com/Cartucho/mAP
-'''
+# -----------------------------------------------------------
 import glob
 import json
 import os
@@ -14,9 +14,9 @@ import numpy as np
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
-'''
+# -----------------------------------------------------------
 # set MINOVERLAP = 0.75 for mAP0.75
-'''
+# -----------------------------------------------------------
 MINOVERLAP = 0.5 
 
 parser = argparse.ArgumentParser()
@@ -50,9 +50,9 @@ if args.set_class_iou is not None:
 
 # make sure that the cwd() is the location of the python script (so that every path makes sense)
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
-'''
+# -----------------------------------------------------------
 # set path to results on validation set
-'''
+# -----------------------------------------------------------
 GT_PATH = os.path.join(os.getcwd(), 'val', 'ground-truth')
 DR_PATH = os.path.join(os.getcwd(), 'val', 'detection-results')
 # if there are no images then no animation can be shown
@@ -88,21 +88,21 @@ if not args.no_plot:
 
 
 def log_average_miss_rate(precision, fp_cumsum, num_images):
-    """
-        log-average miss rate:
-            Calculated by averaging miss rates at 9 evenly spaced FPPI points
-            between 10e-2 and 10e0, in log-space.
+    # -----------------------------------------------------------
+        # log-average miss rate:
+        #     Calculated by averaging miss rates at 9 evenly spaced FPPI points
+        #     between 10e-2 and 10e0, in log-space.
 
-        output:
-                lamr | log-average miss rate
-                mr | miss rate
-                fppi | false positives per image
+        # output:
+        #         lamr | log-average miss rate
+        #         mr | miss rate
+        #         fppi | false positives per image
 
-        references:
-            [1] Dollar, Piotr, et al. "Pedestrian Detection: An Evaluation of the
-               State of the Art." Pattern Analysis and Machine Intelligence, IEEE
-               Transactions on 34.4 (2012): 743 - 761.
-    """
+        # references:
+        #     [1] Dollar, Piotr, et al. "Pedestrian Detection: An Evaluation of the
+        #        State of the Art." Pattern Analysis and Machine Intelligence, IEEE
+        #        Transactions on 34.4 (2012): 743 - 761.
+    # -----------------------------------------------------------
 
     # if there were no detections of that class
     if precision.size == 0:
@@ -129,16 +129,16 @@ def log_average_miss_rate(precision, fp_cumsum, num_images):
 
     return lamr, mr, fppi
 
-"""
- throw error and exit
-"""
+# -----------------------------------------------------------
+#  throw error and exit
+# -----------------------------------------------------------
 def error(msg):
     print(msg)
     sys.exit(0)
 
-"""
- check if the number is a float between 0.0 and 1.0
-"""
+# -----------------------------------------------------------
+#  check if the number is a float between 0.0 and 1.0
+# -----------------------------------------------------------
 def is_float_between_0_and_1(value):
     try:
         val = float(value)
@@ -149,63 +149,62 @@ def is_float_between_0_and_1(value):
     except ValueError:
         return False
 
-"""
- Calculate the AP given the recall and precision array
-    1st) We compute a version of the measured precision/recall curve with
-         precision monotonically decreasing
-    2nd) We compute the AP as the area under this curve by numerical integration.
-"""
+# -----------------------------------------------------------
+# Calculate the AP given the recall and precision array
+# 1) compute a version of the measured precision/recall curve with precision monotonically decreasing
+# 2) compute the AP as the area under this curve by numerical integration.
+# -----------------------------------------------------------
 def voc_ap(rec, prec):
-    """
-    --- Official matlab code VOC2012---
-    mrec=[0 ; rec ; 1];
-    mpre=[0 ; prec ; 0];
-    for i=numel(mpre)-1:-1:1
-            mpre(i)=max(mpre(i),mpre(i+1));
-    end
-    i=find(mrec(2:end)~=mrec(1:end-1))+1;
-    ap=sum((mrec(i)-mrec(i-1)).*mpre(i));
-    """
+    # -----------------------------------------------------------
+    # --- Official matlab code VOC2012---
+    # mrec=[0 ; rec ; 1];
+    # mpre=[0 ; prec ; 0];
+    # for i=numel(mpre)-1:-1:1
+    #         mpre(i)=max(mpre(i),mpre(i+1));
+    # end
+    # i=find(mrec(2:end)~=mrec(1:end-1))+1;
+    # ap=sum((mrec(i)-mrec(i-1)).*mpre(i));
+    # -----------------------------------------------------------
     rec.insert(0, 0.0) # insert 0.0 at begining of list
     rec.append(1.0) # insert 1.0 at end of list
     mrec = rec[:]
     prec.insert(0, 0.0) # insert 0.0 at begining of list
     prec.append(0.0) # insert 0.0 at end of list
     mpre = prec[:]
-    """
-     This part makes the precision monotonically decreasing
-        (goes from the end to the beginning)
-        matlab: for i=numel(mpre)-1:-1:1
-                    mpre(i)=max(mpre(i),mpre(i+1));
-    """
+    # -----------------------------------------------------------
+    #  This part makes the precision monotonically decreasing
+    #     (goes from the end to the beginning)
+    #     matlab: for i=numel(mpre)-1:-1:1
+    #                 mpre(i)=max(mpre(i),mpre(i+1));
+    # -----------------------------------------------------------
     # matlab indexes start in 1 but python in 0, so I have to do:
     #     range(start=(len(mpre) - 2), end=0, step=-1)
     # also the python function range excludes the end, resulting in:
     #     range(start=(len(mpre) - 2), end=-1, step=-1)    
     for i in range(len(mpre)-2, -1, -1):
         mpre[i] = max(mpre[i], mpre[i+1])
-    """
-     This part creates a list of indexes where the recall changes
-        matlab: i=find(mrec(2:end)~=mrec(1:end-1))+1;
-    """
+    # -----------------------------------------------------------
+    #  This part creates a list of indexes where the recall changes
+    #     matlab: i=find(mrec(2:end)~=mrec(1:end-1))+1;
+    # -----------------------------------------------------------
     i_list = []
     for i in range(1, len(mrec)):
         if mrec[i] != mrec[i-1]:
             i_list.append(i) # if it was matlab would be i + 1
-    """
-     The Average Precision (AP) is the area under the curve
-        (numerical integration)
-        matlab: ap=sum((mrec(i)-mrec(i-1)).*mpre(i));
-    """
+    # -----------------------------------------------------------
+    #  The Average Precision (AP) is the area under the curve
+    #     (numerical integration)
+    #     matlab: ap=sum((mrec(i)-mrec(i-1)).*mpre(i));
+    # -----------------------------------------------------------
     ap = 0.0
     for i in i_list:
         ap += ((mrec[i]-mrec[i-1])*mpre[i])
     return ap, mrec, mpre
 
 
-"""
- Convert the lines of a file to a list
-"""
+# -----------------------------------------------------------
+#  Convert the lines of a file to a list
+# -----------------------------------------------------------
 def file_lines_to_list(path):
     # open txt file lines to a list
     with open(path) as f:
@@ -214,9 +213,9 @@ def file_lines_to_list(path):
     content = [x.strip() for x in content]
     return content
 
-"""
- Draws text in image
-"""
+# -----------------------------------------------------------
+#  Draws text in image
+# -----------------------------------------------------------
 def draw_text_in_image(img, text, pos, color, line_width):
     font = cv2.FONT_HERSHEY_PLAIN
     fontScale = 1
@@ -231,9 +230,9 @@ def draw_text_in_image(img, text, pos, color, line_width):
     text_width, _ = cv2.getTextSize(text, font, fontScale, lineType)[0]
     return img, (line_width + text_width)
 
-"""
- Plot - adjust axes
-"""
+# -----------------------------------------------------------
+#  Plot - adjust axes
+# -----------------------------------------------------------
 def adjust_axes(r, t, fig, axes):
     # get text width for re-scaling
     bb = t.get_window_extent(renderer=r)
@@ -246,9 +245,9 @@ def adjust_axes(r, t, fig, axes):
     x_lim = axes.get_xlim()
     axes.set_xlim([x_lim[0], x_lim[1]*propotion])
 
-"""
- Draw plot using Matplotlib
-"""
+# -----------------------------------------------------------
+#  Draw plot using Matplotlib
+# -----------------------------------------------------------
 def draw_plot_func(dictionary, n_classes, window_title, plot_title, x_label, output_path, to_show, plot_color, true_p_bar):
     # sort the dictionary by decreasing value, into a list of tuples
     sorted_dic_by_value = sorted(dictionary.items(), key=operator.itemgetter(1))
@@ -256,12 +255,12 @@ def draw_plot_func(dictionary, n_classes, window_title, plot_title, x_label, out
     sorted_keys, sorted_values = zip(*sorted_dic_by_value)
     # 
     if true_p_bar != "":
-        """
-         Special case to draw in:
-            - green -> TP: True Positives (object detected and matches ground-truth)
-            - red -> FP: False Positives (object detected but does not match ground-truth)
-            - orange -> FN: False Negatives (object not detected but present in the ground-truth)
-        """
+        # -----------------------------------------------------------
+        #  Special case to draw in:
+        #     - green -> TP: True Positives (object detected and matches ground-truth)
+        #     - red -> FP: False Positives (object detected but does not match ground-truth)
+        #     - orange -> FN: False Negatives (object not detected but present in the ground-truth)
+        # -----------------------------------------------------------
         fp_sorted = []
         tp_sorted = []
         for key in sorted_keys:
@@ -271,9 +270,9 @@ def draw_plot_func(dictionary, n_classes, window_title, plot_title, x_label, out
         plt.barh(range(n_classes), tp_sorted, align='center', color='forestgreen', label='True Positive', left=fp_sorted)
         # add legend
         plt.legend(loc='lower right')
-        """
-         Write number on side of bar
-        """
+        # -----------------------------------------------------------
+        #  Write number on side of bar
+        # -----------------------------------------------------------
         fig = plt.gcf() # gcf - get current figure
         axes = plt.gca()
         r = fig.canvas.get_renderer()
@@ -290,9 +289,9 @@ def draw_plot_func(dictionary, n_classes, window_title, plot_title, x_label, out
                 adjust_axes(r, t, fig, axes)
     else:
         plt.barh(range(n_classes), sorted_values, color=plot_color)
-        """
-         Write number on side of bar
-        """
+        # -----------------------------------------------------------
+        #  Write number on side of bar
+        # -----------------------------------------------------------
         fig = plt.gcf() # gcf - get current figure
         axes = plt.gca()
         r = fig.canvas.get_renderer()
@@ -309,9 +308,9 @@ def draw_plot_func(dictionary, n_classes, window_title, plot_title, x_label, out
     # write classes in y axis
     tick_font_size = 12
     plt.yticks(range(n_classes), sorted_keys, fontsize=tick_font_size)
-    """
-     Re-scale height accordingly
-    """
+    # -----------------------------------------------------------
+    #  Re-scale height accordingly
+    # -----------------------------------------------------------
     init_height = fig.get_figheight()
     # comput the matrix height in points and inches
     dpi = fig.dpi
@@ -340,9 +339,9 @@ def draw_plot_func(dictionary, n_classes, window_title, plot_title, x_label, out
     # close the plot
     plt.close()
 
-"""
- Create a ".temp_files/" and "results/" directory
-"""
+# -----------------------------------------------------------
+#  Create a ".temp_files/" and "results/" directory
+# -----------------------------------------------------------
 TEMP_FILES_PATH = ".temp_files"
 if not os.path.exists(TEMP_FILES_PATH): # if it doesn't exist already
     os.makedirs(TEMP_FILES_PATH)
@@ -360,11 +359,11 @@ if draw_plot:
 if show_animation:
     os.makedirs(os.path.join(results_files_path, "images", "detections_one_by_one"))
 
-"""
- ground-truth
-     Load each of the ground-truth files into a temporary ".json" file.
-     Create a list of all the class names present in the ground-truth (gt_classes).
-"""
+# -----------------------------------------------------------
+#  ground-truth
+#      Load each of the ground-truth files into a temporary ".json" file.
+#      Create a list of all the class names present in the ground-truth (gt_classes).
+# -----------------------------------------------------------
 # get a list with the ground-truth files
 ground_truth_files_list = glob.glob(GT_PATH + '/*.txt')
 if len(ground_truth_files_list) == 0:
@@ -456,10 +455,10 @@ n_classes = len(gt_classes)
 #print(gt_classes)
 #print(gt_counter_per_class)
 
-"""
- Check format of the flag --set-class-iou (if used)
-    e.g. check if class exists
-"""
+# -----------------------------------------------------------
+#  Check format of the flag --set-class-iou (if used)
+#     e.g. check if class exists
+# -----------------------------------------------------------
 if specific_iou_flagged:
     n_args = len(args.set_class_iou)
     error_msg = \
@@ -480,10 +479,10 @@ if specific_iou_flagged:
         if not is_float_between_0_and_1(num):
             error('Error, IoU must be between 0.0 and 1.0. Flag usage:' + error_msg)
 
-"""
- detection-results
-     Load each of the detection-results files into a temporary ".json" file.
-"""
+# -----------------------------------------------------------
+#  detection-results
+#      Load each of the detection-results files into a temporary ".json" file.
+# -----------------------------------------------------------
 # get a list with the detection-results files
 dr_files_list = glob.glob(DR_PATH + '/*.txt')
 dr_files_list.sort()
@@ -527,9 +526,9 @@ for class_index, class_name in enumerate(gt_classes):
     with open(TEMP_FILES_PATH + "/" + class_name + "_dr.json", 'w') as outfile:
         json.dump(bounding_boxes, outfile)
 
-"""
- Calculate the AP for each class
-"""
+# -----------------------------------------------------------
+#  Calculate the AP for each class
+# -----------------------------------------------------------
 sum_AP = 0.0
 ap_dictionary = {}
 lamr_dictionary = {}
@@ -540,14 +539,14 @@ with open(results_files_path + "/results.txt", 'w') as results_file:
 
     for class_index, class_name in enumerate(gt_classes):
         count_true_positives[class_name] = 0
-        """
-         Load detection-results of that class
-        """
+        # -----------------------------------------------------------
+        #  Load detection-results of that class
+        # -----------------------------------------------------------
         dr_file = TEMP_FILES_PATH + "/" + class_name + "_dr.json"
         dr_data = json.load(open(dr_file))
-        """
-         Assign detection-results to ground-truth objects
-        """
+        # -----------------------------------------------------------
+        #  Assign detection-results to ground-truth objects
+        # -----------------------------------------------------------
         nd = len(dr_data)
         tp = [0] * nd    # creates an array of zeros of size nd
         fp = [0] * nd
@@ -637,9 +636,9 @@ with open(results_files_path + "/results.txt", 'w') as results_file:
                 if ovmax > 0:
                     status = "INSUFFICIENT OVERLAP"
 
-            """
-             Draw image to show animation
-            """
+            # -----------------------------------------------------------
+            #  Draw image to show animation
+            # -----------------------------------------------------------
             if show_animation:
                 height, widht = img.shape[:2]
                 # colors (OpenCV works with BGR)
@@ -727,9 +726,9 @@ with open(results_files_path + "/results.txt", 'w') as results_file:
             F1_text = "0.00" + " = " + class_name + " F1 " 
             Recall_text = "0.00%" + " = " + class_name + " Recall " 
             Precision_text = "0.00%" + " = " + class_name + " Precision " 
-        """
-         Write to results.txt
-        """
+        # -----------------------------------------------------------
+        #  Write to results.txt
+        # -----------------------------------------------------------
         rounded_prec = [ '%.2f' % elem for elem in prec ]
         rounded_rec = [ '%.2f' % elem for elem in rec ]
         results_file.write(text + "\n Precision: " + str(rounded_prec) + "\n Recall :" + str(rounded_rec) + "\n\n")
@@ -745,9 +744,9 @@ with open(results_files_path + "/results.txt", 'w') as results_file:
         lamr, mr, fppi = log_average_miss_rate(np.array(rec), np.array(fp), n_images)
         lamr_dictionary[class_name] = lamr
 
-        """
-         Draw plot
-        """
+        # -----------------------------------------------------------
+        #  Draw plot
+        # -----------------------------------------------------------
         if draw_plot:
             plt.plot(rec, prec, '-o')
             # add a new penultimate point to the list (mrec[-2], 0.0)
@@ -819,9 +818,9 @@ with open(results_files_path + "/results.txt", 'w') as results_file:
 # remove the temp_files directory
 shutil.rmtree(TEMP_FILES_PATH)
 
-"""
- Count total of detection-results
-"""
+# -----------------------------------------------------------
+#  Count total of detection-results
+# -----------------------------------------------------------
 # iterate through all the files
 det_counter_per_class = {}
 for txt_file in dr_files_list:
@@ -842,9 +841,9 @@ for txt_file in dr_files_list:
 dr_classes = list(det_counter_per_class.keys())
 
 
-"""
- Plot the total number of occurences of each class in the ground-truth
-"""
+# -----------------------------------------------------------
+#  Plot the total number of occurences of each class in the ground-truth
+# -----------------------------------------------------------
 if draw_plot:
     window_title = "ground-truth-info"
     plot_title = "ground-truth\n"
@@ -865,26 +864,26 @@ if draw_plot:
         '',
         )
 
-"""
- Write number of ground-truth objects per class to results.txt
-"""
+# -----------------------------------------------------------
+#  Write number of ground-truth objects per class to results.txt
+# -----------------------------------------------------------
 with open(results_files_path + "/results.txt", 'a') as results_file:
     results_file.write("\n# Number of ground-truth objects per class\n")
     for class_name in sorted(gt_counter_per_class):
         results_file.write(class_name + ": " + str(gt_counter_per_class[class_name]) + "\n")
 
-"""
- Finish counting true positives
-"""
+# -----------------------------------------------------------
+#  Finish counting true positives
+# -----------------------------------------------------------
 for class_name in dr_classes:
     # if class exists in detection-result but not in ground-truth then there are no true positives in that class
     if class_name not in gt_classes:
         count_true_positives[class_name] = 0
 #print(count_true_positives)
 
-"""
- Plot the total number of occurences of each class in the "detection-results" folder
-"""
+# -----------------------------------------------------------
+#  Plot the total number of occurences of each class in the "detection-results" folder
+# -----------------------------------------------------------
 if draw_plot:
     window_title = "detection-results-info"
     # Plot title
@@ -910,9 +909,9 @@ if draw_plot:
         true_p_bar
         )
 
-"""
- Write number of detected objects per class to results.txt
-"""
+# -----------------------------------------------------------
+#  Write number of detected objects per class to results.txt
+# -----------------------------------------------------------
 with open(results_files_path + "/results.txt", 'a') as results_file:
     results_file.write("\n# Number of detected objects per class\n")
     for class_name in sorted(dr_classes):
@@ -922,9 +921,9 @@ with open(results_files_path + "/results.txt", 'a') as results_file:
         text += ", fp:" + str(n_det - count_true_positives[class_name]) + ")\n"
         results_file.write(text)
 
-"""
- Draw log-average miss rate plot (Show lamr of all classes in decreasing order)
-"""
+# -----------------------------------------------------------
+#  Draw log-average miss rate plot (Show lamr of all classes in decreasing order)
+# -----------------------------------------------------------
 if draw_plot:
     window_title = "lamr"
     plot_title = "log-average miss rate"
@@ -944,9 +943,9 @@ if draw_plot:
         ""
         )
 
-"""
- Draw mAP plot (Show AP's of all classes in decreasing order)
-"""
+# -----------------------------------------------------------
+#  Draw mAP plot (Show AP's of all classes in decreasing order)
+# -----------------------------------------------------------
 if draw_plot:
     window_title = "mAP"
     plot_title = "mAP = {0:.2f}%".format(mAP*100)

@@ -32,12 +32,12 @@ FLOTVIS .
 ## Dependencies:
 
 ```
-tensorflow==1.15.2
+tensorflow==1.15
 Keras==2.1.5
 scipy==1.2.1
 numpy==1.17.0
 matplotlib==3.1.2
-opencv_python==4.1.2
+opencv_python==4.1.2.30
 tqdm==4.60.0
 Pillow==8.2.0
 h5py==2.10.0
@@ -52,15 +52,15 @@ h5py==2.10.0
 # Detection
 ```
 # predict single image
-python3 predict.py --mode='image' --img='test/test.jpg'
+$ python3 predict.py --mode='image' --img='test/test.jpg'
 # predict all images in folder
-python3 predict.py --mode='batch' --imgdir='./test/'
+$ python3 predict.py --mode='batch' --imgdir='./test/'
 # predict video
-python3 predict.py --mode='video' --vid='test/test.mp4'
+$ python3 predict.py --mode='video' --vid='test/test.mp4'
 # predict using camera
-python3 predict.py --mode='camera'
+$ python3 predict.py --mode='camera'
 # get FPS
-python3 predict.py --mode='fps'
+$ python3 predict.py --mode='fps'
 ```
 
 ## References
@@ -77,3 +77,45 @@ python3 predict.py --mode='fps'
 [A neat implementation of YOLO v3 with TF 2.2 and Keras](https://github.com/schissmantics/yolo-tf2)  
 [A popular Implementation of YOLO v3 based on multi-backend Keras](https://github.com/qqwweee/keras-yolo3/)  
 [Another Implementation of YOLO v3 based on multi-backend Keras](https://github.com/experiencor/keras-yolo3)  
+
+## Troubleshooting  
+
+### if Jupyter Notebook running on your local machine prompts "No Module named Tensorflow"    
+It is a problem of Jupyter with virtualenv.    
+Solved using following command.    
+```  
+$ cd $HOME  
+$ brew install   
+$ pip3 install jupyter   
+$ jupyter notebook --generate-config   
+# this installs kernelspec python3 in $HOME/Library/Jupyter/kernels/python3  
+$ python3 -m ipykernel install --user  
+```
+Assuming you use pyenv and works in a virtual environment named `venv`, then:   
+```
+# Activate your virtualenv  
+$ pyenv activate tf1.15  
+# Check path of the Python interpreter  
+$ pyenv which python  
+$HOME/.pyenv/versions/tf1.15/bin/python # copy this output  
+# Deactivate the virtualenv  
+$ pyenv deactivate  
+$ mkdir $HOME/Library/Jupyter/kernels/venv
+$ touch $HOME/Library/Jupyter/kernels/venv/kernel.json
+```
+add the following content to the newly created `kernel.json`
+```
+{
+  "argv": [
+    "$HOME/.pyenv/versions/tf1.15/bin/python",
+    "-m", "ipykernel",
+    "-f", "{connection_file}"
+  ],
+  "display_name": "venv",
+  "language": "python"
+}
+```
+Finally, check the jupyter kernel using: 
+```
+$ jupyter kernelspec list
+```

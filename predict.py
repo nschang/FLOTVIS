@@ -1,24 +1,21 @@
-#!/usr/bin/env python
 # coding=utf-8
-import colorsys
 import os
-from os import listdir
-from os.path import isfile, join
+# from os import listdir
+# from os.path import isfile, join
 from pathlib import Path
-import numpy as np
-import glob
+# import glob
 import time
 import argparse
 import cv2
 import numpy as np
 from tqdm import tqdm
 from PIL import Image
-from keras import backend as K
-from keras.layers import Input
-from keras.models import load_model
+# from keras import backend as K
+# from keras.layers import Input
+# from keras.models import load_model
 from yolo import YOLO
-from nets.yolo4 import yolo_body, yolo_eval
-from utils.utils import letterbox_image
+# from nets.yolo4 import yolo_body, yolo_eval
+# from utils.utils import letterbox_image
 
 parser = argparse.ArgumentParser()
 
@@ -38,14 +35,14 @@ if not os.path.exists("./prediction"):
 if __name__ == "__main__":
     yolo = YOLO()
     mode = args.mode
-    '''
+    # -----------------------------------------------------------
     # '--mode=':
     # 'image'   to predict single image
     # 'batch'   to predict all images in folder
     # 'video'   for video prediction
     # 'camera'  to predict using camera
     # 'fps'     returns the FPS value
-    '''
+    # -----------------------------------------------------------
 #############IMAGE##############
     if mode == "image":
        while True:
@@ -71,17 +68,17 @@ if __name__ == "__main__":
                 image       = Image.open(image_path)
                 r_image     = yolo.detect_image(image)
                 r_image.save(os.path.join("./prediction/", image_id))
-
 #############VIDEO##############   
     elif mode == "video":
-        '''
+        # -----------------------------------------------------------
         # use ctrl+c to save video
         # DO NOT exit directly after prediction
-        '''
+        # -----------------------------------------------------------
         # specify video path
-        video_path      = args.vid    # path of the video. 
-        video_save_path = args.saveto # path to save the video. video_save_path="" means no save
-        video_fps       = 60.0        # fps of the saved video
+        video_path      = args.vid    # path of the video
+        video_save_path = args.saveto # path to save the video
+        # video_save_path = "" means no save
+        video_fps       = 60.0        # fps of the output video
         #############
         capture=cv2.VideoCapture(video_path)
         if video_save_path!="":
@@ -116,14 +113,15 @@ if __name__ == "__main__":
         cv2.destroyAllWindows()
 #############CAMERA##############   
     elif mode == "camera":
-        '''
+        # -----------------------------------------------------------
         # use ctrl+c to save video
         # DO NOT exit directly after prediction
-        '''
+        # -----------------------------------------------------------
         # specify video path
-        video_path      = 0  # path of the video. video_path=0 means detect using camera
-        video_save_path = "./video"     # path to save the video. video_save_path="" means no save
-        video_fps       = 60.0          # fps of the saved video
+        video_path      = 0  # video_path=0 means detect using camera
+        video_save_path = args.saveto     # path to save the video 
+        # video_save_path = "" means no save
+        video_fps       = 60.0          # fps of the output video
         #############
         capture=cv2.VideoCapture('test/' + video_path + '.mp4')
         if video_save_path!="":
@@ -156,14 +154,19 @@ if __name__ == "__main__":
         capture.release()
         out.release()
         cv2.destroyAllWindows()
-
 #############FPS##############
     elif mode == "fps":
+        # -----------------------------------------------------------
+        # includes inference, score filtering, non-maximal suppression
+        # does NOT include pre-processing (normalization and resizing) and draw
+        # default test using test/test.jpg
+        # note that the FPS when using camera will be lower than this value
+        # due to frame limites of camera and preprocessing and draw process
+        # -----------------------------------------------------------
         test_interval = 100
         img = args.img
-        image = Image.open('test/' + img + '.jpg')
+        image = Image.open(img)
         tact_time = yolo.get_FPS(image, test_interval)
         print(str(tact_time) + ' seconds, ' + str(1/tact_time) + 'FPS, @batch_size 1')
-    
     else:
         raise AssertionError("Please specify the correct mode:'image','batch','video','camera','fps'")

@@ -1,16 +1,18 @@
-'''
+# -----------------------------------------------------------
 # get ground truth of testing dataset
-'''
+# -----------------------------------------------------------
 import sys
 import os
 import glob
 import xml.etree.ElementTree as ET
 
-'''
+# -----------------------------------------------------------
 # get class
-'''
+# -----------------------------------------------------------
 def get_classes(classes_path):
-    '''loads the classes'''
+    # -----------------------------------------------------------
+    # loads the classes
+    # -----------------------------------------------------------
     with open(classes_path) as f:
         class_names = f.readlines()
     class_names = [c.strip() for c in class_names]
@@ -33,10 +35,10 @@ for image_id in image_ids:
                 if int(difficult)==1:
                     difficult_flag = True
             obj_name = obj.find('name').text
-            '''
-            uncomment the following section if other pre-defined labels 
-            are present in annotation file
-            '''
+            # -----------------------------------------------------------
+            # uncomment the following section if other pre-defined labels 
+            # are present in annotation file
+            # -----------------------------------------------------------
             # classes_path = 'model_data/class.txt'
             # class_names = get_classes(classes_path)
             # if obj_name not in class_names:
