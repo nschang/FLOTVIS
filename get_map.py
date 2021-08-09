@@ -1,6 +1,6 @@
-# --------------------------------------------
+################################
 # modified from https://github.com/Cartucho/mAP
-# --------------------------------------------
+################################
 import glob
 import json
 import os
@@ -14,11 +14,11 @@ import numpy as np
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
-# --------------------------------------------
+################################
 # set MINOVERLAP = 0.75 for mAP0.75
-# --------------------------------------------
+################################
 MINOVERLAP = 0.5 
-# --------------------------------------------
+################################
 parser = argparse.ArgumentParser()
 parser.add_argument('-na', '--no-animation', help="no animation is shown.", action="store_true")
 parser.add_argument('-np', '--no-plot', help="no plot is shown.", action="store_true")
@@ -47,13 +47,13 @@ if args.set_class_iou is not None:
     specific_iou_flagged = True
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
-# --------------------------------------------
+################################
 # set path to results on validation set
-# --------------------------------------------
+################################
 GT_PATH = os.path.join(os.getcwd(), 'val', 'ground-truth')
 DR_PATH = os.path.join(os.getcwd(), 'val', 'detection-results')
 IMG_PATH = os.path.join(os.getcwd(), 'val', 'images-optional')
-# --------------------------------------------
+################################
 if os.path.exists(IMG_PATH): 
     for dirpath, dirnames, files in os.walk(IMG_PATH):
         if not files:

@@ -14,11 +14,11 @@ from utils.utils import letterbox_image
 from random import randint
 
 
-################################
+'''
 # Both model_path and classes_path need to be updated!
 # in case of shape mismatch error during training,
 # check model_path and classes_path .
-################################
+'''
 #class C_YOLO(YOLO):
 class YOLO(object):
     _defaults = {
@@ -30,9 +30,9 @@ class YOLO(object):
         "iou"               : 0.3,
         "max_boxes"         : 100,
         "model_image_size"  : (608, 608), # use (416,416) or (608,608) depending on RAM size
-        ################################
+        '''
         # toggle letterbox_image to resize input without distortion
-        ################################
+        '''
         "letterbox_image"   : True,
     }
 
@@ -43,9 +43,9 @@ class YOLO(object):
         else:
             return "Unrecognized attribute name '" + n + "'"
 
-    ################################
+    '''
     # init yolo
-    ################################
+    '''
     def __init__(self, **kwargs):
         self.__dict__.update(self._defaults)
         self.class_names = self._get_class()
@@ -53,9 +53,9 @@ class YOLO(object):
         self.sess = K.get_session()
         self.boxes, self.scores, self.classes = self.generate()
 
-    ################################
+    '''
     # get class
-    ################################
+    '''
     def _get_class(self):
         classes_path = os.path.expanduser(self.classes_path)
         with open(classes_path) as f:
@@ -63,9 +63,9 @@ class YOLO(object):
         class_names = [c.strip() for c in class_names]
         return class_names
 
-    ################################
+    '''
     # get anchor boxes
-    ################################
+    '''
     def _get_anchors(self):
         anchors_path = os.path.expanduser(self.anchors_path)
         with open(anchors_path) as f:
@@ -73,9 +73,9 @@ class YOLO(object):
         anchors = [float(x) for x in anchors.split(',')]
         return np.array(anchors).reshape(-1, 2)
 
-    ################################
+    '''
     # load classes and pre-trained model
-    ################################
+    '''
     def generate(self):
         #self.score = 0.01
         #self.iou = 0.5
@@ -86,10 +86,10 @@ class YOLO(object):
         num_anchors = len(self.anchors)
         num_classes = len(self.class_names)
 
-        ################################
+        '''
         # load model if present
         # otherwise create model first
-        ################################
+        '''
         try:
             self.yolo_model = load_model(model_path, compile=False)
         except:
@@ -117,19 +117,19 @@ class YOLO(object):
 
         self.input_image_shape = K.placeholder(shape=(2, ))
 
-        ################################
+        '''
         # yolo_eval handles post-processing of detection result
         # which includes Decoding, Non-Maximum Suppression (NMS),
         # Thresholding, etc.
-        ################################
+        '''
         boxes, scores, classes = yolo_eval(self.yolo_model.output, self.anchors,
                 num_classes, self.input_image_shape, max_boxes = self.max_boxes,
                 score_threshold = self.score, iou_threshold = self.iou, letterbox_image = self.letterbox_image)
         return boxes, scores, classes
 
-    ################################
+    '''
     # detect image
-    ################################
+    '''
     def detect_image(self, image):
         # convert to RGB image to prevent error from grayscale image
         image = image.convert('RGB')
@@ -198,32 +198,32 @@ class YOLO(object):
             draw.rectangle(
                 [tuple(text_origin), tuple(text_origin + label_size)],
                 fill=self.colors[c])
-            ################################
+            '''
             # draw box
-            ################################
+            '''
             draw1 = ImageDraw.Draw(image, "RGBA")
             draw1.rectangle(((0, 0), (158, 36)), fill=(200, 200, 200, 66))
             #draw1.rectangle(((280, 10), (1010, 706)), outline=(0, 0, 0, 127), width=3)
-            ################################
+            '''
             draw.text(text_origin, str(label,'UTF-8'), fill=(0, 0, 0), font=font)
             draw.text((5, 5), "plastic count: " + str(out_boxes.shape[0]), (0, 0, 0), font=font) # comment out to beautify
-            ################################
+            '''
             # beautify output (optional)
-            ################################
+            '''
             # make_color = lambda : (randint(50, 255), randint(50, 255), randint(50,255))
             # z = 5
             # for c in "plastic count: ":
             #     draw.text((z, 5), c, make_color())
             #     z = z + 12
-            ################################
+            '''
             del draw
 
         return image
-        img.save('prediction.jpg')
+        #img.save('prediction.jpg')
 
-    ################################
+    '''
     # batch detect image in folder
-    ################################
+    '''
     def detect_batch(self, image_id, image):
         # write classes to a new txt file
         f = open("./test/"+image_id+".txt","w")
@@ -299,13 +299,13 @@ class YOLO(object):
             del draw
 
         return image
-        img.save('prediction.jpg')
+        #img.save('prediction.jpg')
         f.close()
         return
 
-    ################################
+    '''
     # get FPS
-    ################################
+    '''
     def get_FPS(self, image, test_interval):
         if self.letterbox_image:
             boxed_image = letterbox_image(image, (self.model_image_size[1],self.model_image_size[0]))

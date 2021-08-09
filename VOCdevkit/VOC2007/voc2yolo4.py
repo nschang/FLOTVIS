@@ -6,12 +6,13 @@ random.seed(0)
 xmlfilepath=r'Annotations'
 saveBasePath=r"ImageSets/Main"
 
-# ----------------------------------------------------------------------
-# edit trainval_percent to change percentage of training/validation set
+'''
+# edit trainval_percent to change 
+# training/validation set
 # train_percent should not change
-# ----------------------------------------------------------------------
+'''
 trainval_percent=0.9
-train_percent=1
+train_percent=1 # should not change
 
 temp_xml = os.listdir(xmlfilepath)
 total_xml = []

@@ -1,5 +1,5 @@
 # FLOTVIS
-![header.png](titel.png)  
+![header.png](header.webp)  
 
 A real-time object detector API for floating plastic litter, built with YOLOv4 and Keras/Tensorflow.  
 

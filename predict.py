@@ -38,13 +38,14 @@ if not os.path.exists("./prediction"):
 if __name__ == "__main__":
     yolo = YOLO()
     mode = args.mode
-    ################################
+    '''
     # '--mode=':
     # 'image'   to predict single image
     # 'batch'   to predict all images in folder
     # 'video'   for video prediction
     # 'camera'  to predict using camera
     # 'fps'     returns the FPS value
+    '''
 #############IMAGE##############
     if mode == "image":
        while True:
@@ -82,15 +83,15 @@ if __name__ == "__main__":
 
 #############VIDEO##############   
     elif mode == "video":
-        ################################
+        '''
         # use ctrl+c to save video
         # DO NOT exit directly after prediction
-        ################################
+        '''
         # specify video path
         video_path      = args.vid    # path of the video. 
         video_save_path = args.saveto # path to save the video. video_save_path="" means no save
         video_fps       = 60.0        # fps of the saved video
-        ################################
+        #############
         capture=cv2.VideoCapture(video_path)
         if video_save_path!="":
             fourcc = cv2.VideoWriter_fourcc(*'XVID')
@@ -124,15 +125,15 @@ if __name__ == "__main__":
         cv2.destroyAllWindows()
 #############CAMERA##############   
     elif mode == "camera":
-        ################################
+        '''
         # use ctrl+c to save video
         # DO NOT exit directly after prediction
-        ################################
+        '''
         # specify video path
         video_path      = 0  # path of the video. video_path=0 means detect using camera
         video_save_path = "./video"     # path to save the video. video_save_path="" means no save
         video_fps       = 60.0          # fps of the saved video
-        ################################
+        #############
         capture=cv2.VideoCapture('test/' + video_path + '.mp4')
         if video_save_path!="":
             fourcc = cv2.VideoWriter_fourcc(*'XVID')

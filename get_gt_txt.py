@@ -1,14 +1,14 @@
-# -----------------------------------------------
+'''
 # get ground truth of testing dataset
-# -----------------------------------------------
+'''
 import sys
 import os
 import glob
 import xml.etree.ElementTree as ET
 
-# -----------------------------------------------
+'''
 # get class
-# -----------------------------------------------
+'''
 def get_classes(classes_path):
     '''loads the classes'''
     with open(classes_path) as f:

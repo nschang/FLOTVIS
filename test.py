@@ -1,6 +1,6 @@
-# --------------------------------------------
+'''
 # test network structure
-# --------------------------------------------
+'''
 from keras.layers import Input
 
 from nets.yolo4 import yolo_body

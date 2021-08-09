@@ -1,16 +1,14 @@
-# -----------------------------------------------------
+'''
 # modify model_data/class.txt before running this !
 # otherwise you get a blank ./2007_train.txt
-# note: number of lines in model_data/class.txt should 
-# be the same as number of classes
-# -----------------------------------------------------
+'''
 import xml.etree.ElementTree as ET
 from os import getcwd
 
 sets=[('2007', 'train'), ('2007', 'val'), ('2007', 'test')]
-# -----------------------------------------------------
+'''
 # sequence of class(es) here must be same as in model_data/class.txt
-# -----------------------------------------------------
+'''
 #classes = ["plastic", "organic"]         # two classes
 classes = ["plastic"]                     # single class
 
