@@ -63,7 +63,7 @@ def yolo_head(feats, anchors, num_classes, input_shape, calc_loss=False):
 
 
 '''
-calculate iou between anchor box and ground truth bounding box
+compute iou between anchor box and ground truth bounding box
 '''
 def box_iou(b1, b2):
     13,13,3,1,4
@@ -96,7 +96,7 @@ def box_iou(b1, b2):
     return iou
 
 '''
-calculate loss
+compute loss
 '''
 def yolo_loss(args, anchors, num_classes, ignore_thresh=.5, label_smoothing=0.1, print_loss=False, normalize=True):
     # three layers
@@ -171,7 +171,7 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5, label_smoothing=0.1,
         object_mask_bool = K.cast(object_mask, 'bool')
         
         '''
-        calculate ignore_mask for each frame
+        compute ignore_mask for each frame
         '''
         def loop_body(b, ignore_mask):
             '''
@@ -217,15 +217,15 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5, label_smoothing=0.1,
         box_loss_scale = 2 - y_true[l][...,2:3]*y_true[l][...,3:4]
 
         '''
-        calculate Ciou loss
+        compute Ciou loss
         '''
         raw_true_box = y_true[l][...,0:4]
         ciou = box_ciou(pred_box, raw_true_box)
         ciou_loss = object_mask * box_loss_scale * (1 - ciou)
         
         '''
-        if anchor box present at position, calculate cross-entropy between 1 and confidence level
-        if no anchor box present at position, calculate cross entropy between 0 and confidence level
+        if anchor box present at position, compute cross-entropy between 1 and confidence level
+        if no anchor box present at position, compute cross entropy between 0 and confidence level
         while ignoring samples with best_iou<ignore_thresh
         '''
         confidence_loss = object_mask * K.binary_crossentropy(object_mask, raw_pred[...,4:5], from_logits=True)+ \
@@ -237,7 +237,7 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5, label_smoothing=0.1,
         confidence_loss = K.sum(confidence_loss)
         class_loss = K.sum(class_loss)
         '''
-        Calculate positive samples
+        compute positive samples
         '''
         num_pos += tf.maximum(K.sum(K.cast(object_mask, tf.float32)), 1)
         loss += location_loss + confidence_loss + class_loss

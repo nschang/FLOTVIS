@@ -47,7 +47,7 @@ def box_ciou(b1, b2):
     iou = intersect_area / K.maximum(union_area, K.epsilon())
 
     '''
-    calculate distance to center
+    compute distance to center
     center_distance (batch, feat_w, feat_h, anchor_num)
     '''
     center_distance = K.sum(K.square(b1_xy - b2_xy), axis=-1)
@@ -55,7 +55,7 @@ def box_ciou(b1, b2):
     enclose_maxes = K.maximum(b1_maxes, b2_maxes)
     enclose_wh = K.maximum(enclose_maxes - enclose_mins, 0.0)
     '''
-    calculate diagonal distance
+    compute diagonal distance
     enclose_diagonal (batch, feat_w, feat_h, anchor_num)
     '''
     enclose_diagonal = K.sum(K.square(enclose_wh), axis=-1)

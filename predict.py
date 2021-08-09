@@ -1,24 +1,24 @@
 #!/usr/bin/env python
 # coding=utf-8
-#import colorsys
-#import os
-#from os import listdir
-#from os.path import isfile, join
-#from pathlib import Path
-#import numpy as np
+import colorsys
+import os
+from os import listdir
+from os.path import isfile, join
+from pathlib import Path
+import numpy as np
 import glob
 import time
 import argparse
 import cv2
 import numpy as np
-#from tqdm import tqdm
+from tqdm import tqdm
 from PIL import Image
-#from keras import backend as K
-#from keras.layers import Input
-#from keras.models import load_model
+from keras import backend as K
+from keras.layers import Input
+from keras.models import load_model
 from yolo import YOLO
-#from nets.yolo4 import yolo_body, yolo_eval
-#from utils.utils import letterbox_image
+from nets.yolo4 import yolo_body, yolo_eval
+from utils.utils import letterbox_image
 
 parser = argparse.ArgumentParser()
 
@@ -64,22 +64,13 @@ if __name__ == "__main__":
            break
 #############BATCH##############
     elif mode == "batch":
-        # return a list of images in test folder
-        image_ids = [f for f in os.listdir('./test/') if f.endswith(".jpg")]
+        image_ids = [f for f in os.listdir(args.imgdir) if f.endswith(".jpg")]
         for image_id in tqdm(image_ids):
-            image_path = "./test/"+image_id
-            image = Image.open(image_path)
-            yolo.detect_batch(image_id,image)
-            r_image = yolo.detect_image(image_id,image)
-            image.save("./prediction/detected-"+image_id)
-            r_image.save("./prediction/detected-"+image_id)
-        print("Conversion completed!")
-
-        imdir = args.imgdir
-        ext = ['jpg', 'png']
-        files = []
-        [files.extend(glob.glob(imdir + '*.' + t)) for t in ext]
-        images = [cv2.imread(file) for file in files]
+            if image_id.lower().endswith(('.png', '.jpg', '.jpeg')):
+                image_path  = os.path.join(image_ids, image_id)
+                image       = Image.open(image_path)
+                r_image     = yolo.detect_image(image)
+                r_image.save(os.path.join("./prediction/", image_id))
 
 #############VIDEO##############   
     elif mode == "video":
@@ -173,5 +164,6 @@ if __name__ == "__main__":
         image = Image.open('test/' + img + '.jpg')
         tact_time = yolo.get_FPS(image, test_interval)
         print(str(tact_time) + ' seconds, ' + str(1/tact_time) + 'FPS, @batch_size 1')
+    
     else:
         raise AssertionError("Please specify the correct mode:'image','batch','video','camera','fps'")
