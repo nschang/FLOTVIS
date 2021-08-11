@@ -29,7 +29,7 @@ FLOTVIS .
     └── gputil.py  
 ```
 
-## Dependencies:
+# Dependencies:
 
 ```
 tensorflow==1.15
@@ -43,13 +43,7 @@ Pillow==8.2.0
 h5py==2.10.0
 ```
 
-# Preparing Dataset
-* [LabelImg](https://github.com/tzutalin/labelImg) for creating ground truth bounding box 
-  default output in `.xml`  
-  class(es): plastic  
-  YOLO4 data format: `class_number <x_center> <y_center> <width> <height>`  
-
-# Prediction
+# Predict
 ```bash
 # predict single image
 $ python3 predict.py --mode='image' --img='test/test.jpg'
@@ -69,6 +63,18 @@ $ python3 predict.py --mode='camera'
 ```bash
 # get FPS
 $ python3 predict.py --mode='fps'
+```
+
+# Prepare Dataset
+- [LabelImg](https://github.com/tzutalin/labelImg) for creating ground truth bounding box 
+  default output in `.xml`  
+  class(es): plastic  
+  YOLO4 data format: `class_number <x_center> <y_center> <width> <height>`  
+
+# Train
+```bash
+# get FPS
+$ python3 train.py
 ```
 
 # References
