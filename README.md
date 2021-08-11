@@ -82,8 +82,11 @@ $ python3 predict.py --mode='fps'
 
 ### if Jupyter Notebook running on your local machine prompts "No Module named Tensorflow"    
 It is a problem of Jupyter with virtualenv.    
-Solved using following command.    
-```  
+.    
+<details>
+<summary>Solved using following command</summary>
+<p>
+```bash  
 $ cd $HOME  
 $ brew install   
 $ pip3 install jupyter   
@@ -92,7 +95,7 @@ $ jupyter notebook --generate-config
 $ python3 -m ipykernel install --user  
 ```
 Assuming you use pyenv and works in a virtual environment named `venv`, then:   
-```
+```bash  
 # Activate your virtualenv  
 $ pyenv activate tf1.15  
 # Check path of the Python interpreter  
@@ -104,7 +107,7 @@ $ mkdir $HOME/Library/Jupyter/kernels/venv
 $ touch $HOME/Library/Jupyter/kernels/venv/kernel.json
 ```
 add the following content to the newly created `kernel.json`
-```
+```json  
 {
   "argv": [
     "$HOME/.pyenv/versions/tf1.15/bin/python",
@@ -116,6 +119,8 @@ add the following content to the newly created `kernel.json`
 }
 ```
 Finally, check the jupyter kernel using: 
-```
+```bash  
 $ jupyter kernelspec list
 ```
+</p>  
+</details>  
