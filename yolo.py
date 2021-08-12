@@ -212,7 +212,7 @@ class YOLO(object):
         # (0,h)------(w,h)
         # -----------------------------------------------------------
         image_w, image_h = image.size # width and height of original image
-        image = image.crop((0, -25, image_w, image_h))
+        image = image.crop((0, - 5e-2 * image_h, image_w, image_h))
         draw2 = ImageDraw.Draw(image)
         draw2.text((5, 0), "plastic count: " + str(out_boxes.shape[0]), (255, 255, 255), font=font)
         # -----------------------------------------------------------
