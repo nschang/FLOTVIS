@@ -1,10 +1,12 @@
 # FLOTVIS
+
 ![header.png](header.webp)  
 
 A real-time object detector API for floating plastic litter, built with YOLOv4 and Keras/Tensorflow.  
 
-# Contents
-```
+## Contents
+
+```text
 FLOTVIS .  
 ├── VOCdevkit               # Main training dataset  
 │   └── VOC2007  
@@ -29,9 +31,9 @@ FLOTVIS .
     └── gputil.py  
 ```
 
-# Dependencies:
+## Dependencies
 
-```
+```python
 tensorflow==1.15
 Keras==2.1.5
 scipy==1.2.1
@@ -43,41 +45,49 @@ Pillow==8.2.0
 h5py==2.10.0
 ```
 
-# Predict
+## Predict
+
 ```bash
 # predict single image
 $ python3 predict.py --mode='image' --img='test/test.jpg'
 ```
+
 ```bash
 # predict all images in folder
 $ python3 predict.py --mode='batch' --imgdir='./test/'
 ```
+
 ```bash
 # predict video
 $ python3 predict.py --mode='video' --vid='test/test.mp4'
 ```
+
 ```bash
 # predict using camera
 $ python3 predict.py --mode='camera'
 ```
+
 ```bash
 # get FPS
 $ python3 predict.py --mode='fps'
 ```
 
-# Prepare Dataset
-- [LabelImg](https://github.com/tzutalin/labelImg) for creating ground truth bounding box 
+## Prepare Dataset
+
+- [LabelImg](https://github.com/tzutalin/labelImg) for creating ground truth bounding box
   default output in `.xml`  
   class(es): plastic  
   YOLO4 data format: `class_number <x_center> <y_center> <width> <height>`  
 
-# Train
+## Train
+
 ```bash
 # get FPS
 $ python3 train.py
 ```
 
-# References
+## References
+
 - [mean Average Precision (mAP)](https://github.com/Cartucho/mAP)  
 - [Complete-IoU Loss and Cluster-NMS](https://github.com/Zzh-tju/CIoU)  
 - [ImgAug](https://github.com/aleju/imgaug)  
@@ -92,7 +102,7 @@ $ python3 train.py
 - [A popular Implementation of YOLO v3 based on multi-backend Keras](https://github.com/qqwweee/keras-yolo3/)  
 - [Another Implementation of YOLO v3 based on multi-backend Keras](https://github.com/experiencor/keras-yolo3)  
 
-# Troubleshooting  
+## Troubleshooting  
 
 - <details><summary>If Jupyter Notebook running on your local machine prompts "No Module named Tensorflow": it is a problem of Jupyter with virtualenv.</summary>
 
@@ -103,8 +113,10 @@ $ python3 train.py
   $ jupyter notebook --generate-config  
   # this installs kernelspec python3 in $HOME/Library/Jupyter/kernels/python3  
   $ python3 -m ipykernel install --user  
-  ``` 
+  ```
+
   Assuming you use pyenv and works in a virtual environment named `venv`, then:  
+
   ```bash  
   # Activate your virtualenv  
   $ pyenv activate tf1.15  
@@ -116,7 +128,9 @@ $ python3 train.py
   $ mkdir $HOME/Library/Jupyter/kernels/venv
   $ touch $HOME/Library/Jupyter/kernels/venv/kernel.json
   ```
+
   add the following content to the newly created `kernel.json`
+
   ```json  
   {
     "argv": [
@@ -128,8 +142,11 @@ $ python3 train.py
     "language": "python"
   }
   ```
+
   Finally, check the jupyter kernel using:  
+
   ```bash
-  $ jupyter kernelspec list
+  jupyter kernelspec list
   ```
+
 </details>  
