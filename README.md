@@ -93,16 +93,20 @@ $ python3 train.py
 - [ImgAug](https://github.com/aleju/imgaug)  
 - [LabelImg](https://github.com/tzutalin/labelImg)  
 - [Semantic Versioning](https://semver.org/spec/v2.0.0.html)  
+- [tqdm](https://github.com/tqdm/tqdm)
+- [How to improve object-detection](https://github.com/AlexeyAB/darknet#how-to-improve-object-detection)
+- [A neat implementation of YOLO v3 with TF 2.2 and Keras](https://github.com/schissmantics/yolo-tf2)  
+- [A popular Implementation of YOLO v3 based on multi-backend Keras](https://github.com/qqwweee/keras-yolo3/)  
+- [Another Implementation of YOLO v3 based on multi-backend Keras](https://github.com/experiencor/keras-yolo3)  
 - [YOLO implementation on Keras/TF2](https://github.com/schissmantics/yolo-tf2)  
 - [YOLO implementation on Keras](https://github.com/yuto3o/yolox)  
 - [YOLOv4 implementation on Keras](https://github.com/taipingeric/yolo-v4-tf.keras)  
 - [YOLOv4 implementation on Keras](https://github.com/miemie2013/Keras-YOLOv4)  
 - [YOLOv4 implementation on Keras](https://github.com/bubbliiiing/yolov4-keras)  
-- [A neat implementation of YOLO v3 with TF 2.2 and Keras](https://github.com/schissmantics/yolo-tf2)  
-- [A popular Implementation of YOLO v3 based on multi-backend Keras](https://github.com/qqwweee/keras-yolo3/)  
-- [Another Implementation of YOLO v3 based on multi-backend Keras](https://github.com/experiencor/keras-yolo3)  
+- [Deep-SORT-YOLOv4](https://github.com/LeonLok/Deep-SORT-YOLOv4)
+- [Web Based YOLOv4 Graphic Interface by BMWInnovationLab](https://github.com/BMW-InnovationLab/BMW-YOLOv4-Training-Automation)
 
-## Troubleshooting  
+## Troubleshooting
 
 - <details><summary>If Jupyter Notebook running on your local machine prompts "No Module named Tensorflow": it is a problem of Jupyter with virtualenv.</summary>
 

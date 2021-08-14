@@ -85,10 +85,7 @@ class YOLO(object):
         num_anchors = len(self.anchors)
         num_classes = len(self.class_names)
 
-        # -----------------------------------------------------------
-        # load model if present
-        # otherwise create model first
-        # -----------------------------------------------------------
+        # load model if present, otherwise create model first
         try:
             self.yolo_model = load_model(model_path, compile=False)
         except:
@@ -126,11 +123,16 @@ class YOLO(object):
                 score_threshold = self.score, iou_threshold = self.iou, letterbox_image = self.letterbox_image)
         return boxes, scores, classes
 
-    # -----------------------------------------------------------
-    # detect image
-    # -----------------------------------------------------------
+# -----------------------------------------------------------
+# detect image
+# -----------------------------------------------------------
     def detect_image(self, image):
-        # convert to RGB image to prevent error from grayscale image
+        # -----------------------------------------------------------
+        # # BATCH DETECT MODULE 
+        # write list of target images to a new txt file
+        # f = open("./test/"+image_id+".txt","w")
+        # -----------------------------------------------------------
+        # # convert to RGB image to prevent error from grayscale image
         image = image.convert('RGB')
 
         # resize by adding gray bar to image
@@ -169,6 +171,10 @@ class YOLO(object):
 
             # coordinate of prediction box
             top, left, bottom, right = box
+            # -----------------------------------------------------------
+            # BATCH DETECT MODULE
+            # f.write("%s %s %s %s %s %s\n" % (predicted_class, str(score)[:6], str(int(left)), str(int(top)), str(int(right)),str(int(bottom))))
+            # -----------------------------------------------------------
             top = top - 5
             left = left - 5
             bottom = bottom + 5
@@ -213,8 +219,39 @@ class YOLO(object):
         # -----------------------------------------------------------
         image_w, image_h = image.size # width and height of original image
         image = image.crop((0, - 5e-2 * image_h, image_w, image_h))
-        draw2 = ImageDraw.Draw(image)
-        draw2.text((5, 0), "plastic count: " + str(out_boxes.shape[0]), (255, 255, 255), font=font)
+        draw2 = ImageDraw.Draw(image) 
+        # draw2.text((5, 0), "plastic count: " + str(out_boxes.shape[0]), (255, 255, 255), font=font)
+        # -----------------------------------------------------------
+        # draw FPS
+        # -----------------------------------------------------------
+        # includes inference, score filtering, non-maximal suppression
+        # does NOT include pre-processing (normalization and resizing) and draw
+        # default test using test/test.jpg
+        # note that the FPS when using camera will be lower than this value
+        # due to frame limites of camera and preprocessing and draw process
+        # -----------------------------------------------------------
+        test_interval = 1
+        t3 = time.time()
+        for _ in range(test_interval):
+            out_boxes, out_scores, out_classes = self.sess.run(
+                [self.boxes, self.scores, self.classes],
+                feed_dict={
+                    self.yolo_model.input: image_data,
+                    self.input_image_shape: [image.size[1], image.size[0]],
+                    K.learning_phase(): 0})
+        t4 = time.time()
+        tact_time = (t4 - t3)
+        inference_time = "{:.2f}".format(tact_time)
+        frame_per_second = "{:.2f}".format(1/tact_time)
+        draw2.text((5, 0), 
+        "plastic count: " + str(out_boxes.shape[0])
+        + "    FPS: " + frame_per_second
+        + "    Inference time:" + inference_time + " seconds"
+        , (255, 255, 255), font=font)
+        # -----------------------------------------------------------
+        # IoU threshold = 50 %, used Area-Under-Curve for each unique Recall
+        # mean average precision (MAP@0.50) = 0.756655, or 75.67 %
+        # Total Detection Time: Seconds
         # -----------------------------------------------------------
         # beautify output
         # -----------------------------------------------------------
@@ -235,115 +272,26 @@ class YOLO(object):
         del draw2
         del draw
         return image
-
-    # -----------------------------------------------------------
-    # batch detect image in folder
-    # -----------------------------------------------------------
-    def detect_batch(self, image_id, image):
-        # write list of target images to a new txt file
-        f = open("./test/"+image_id+".txt","w")
-        # convert to RGB image to prevent error from grayscale image
-        image = image.convert('RGB')
-
-        # resize by adding gray bar to image
-        if self.letterbox_image:
-            boxed_image = letterbox_image(image, (self.model_image_size[1],self.model_image_size[0]))
-        else:
-            boxed_image = image.resize((self.model_image_size[1],self.model_image_size[0]), Image.BICUBIC)
-        image_data = np.array(boxed_image, dtype='float32')
-        image_data /= 255.
-        # add batch_size dimension
-        image_data = np.expand_dims(image_data, 0)
-
-        # load image to grid and detect
-        out_boxes, out_scores, out_classes = self.sess.run(
-            [self.boxes, self.scores, self.classes],
-            feed_dict={
-                self.yolo_model.input: image_data,
-                self.input_image_shape: [image.size[1], image.size[0]],
-                K.learning_phase(): 0})
-
-        print('Found {} boxes for {}'.format(len(out_boxes), 'img'))
-
-        # initial font size
-        font_size = 1
-        font_path = 'model_data/ArialUnicode.ttf'
-        # set font
-        font = ImageFont.truetype(font=font_path,
-                    size=np.floor(3e-2 * image.size[1] + font_size).astype('int32'))
-        # thickness of prediction box
-        thickness = max((image.size[0] + image.size[1]) // 680, 1)
-
-        for i, c in list(enumerate(out_classes)):
-            predicted_class = self.class_names[c]
-            box = out_boxes[i]
-            score = out_scores[i]
-
-            # coordinate of prediction box
-            top, left, bottom, right = box
-            f.write("%s %s %s %s %s %s\n" % (predicted_class, str(score)[:6], str(int(left)), str(int(top)), str(int(right)),str(int(bottom))))
-            top = top - 5
-            left = left - 5
-            bottom = bottom + 5
-            right = right + 5
-
-            top = max(0, np.floor(top + 0.5).astype('int32'))
-            left = max(0, np.floor(left + 0.5).astype('int32'))
-            bottom = min(image.size[1], np.floor(bottom + 0.5).astype('int32'))
-            right = min(image.size[0], np.floor(right + 0.5).astype('int32'))
-
-            # draw boxes
-            label = '{} {:.2f}'.format(predicted_class, score)
-            draw = ImageDraw.Draw(image)
-            label_size = draw.textsize(label, font)
-            label = label.encode('utf-8')
-            print(label, top, left, bottom, right)
-
-            if top - label_size[1] >= 0:
-                text_origin = np.array([left, top - label_size[1]])
-            else:
-                text_origin = np.array([left, top + 1])
-
-            for i in range(thickness):
-                draw.rectangle(
-                    [left + i, top + i, right - i, bottom - i],
-                    outline=self.colors[c])
-            draw.rectangle(
-                [tuple(text_origin), tuple(text_origin + label_size)],
-                fill=self.colors[c])
-            # draw prediction on each object label
-            draw.text(text_origin, str(label,'UTF-8'), fill=(0, 0, 0), font=font)
-
         # -----------------------------------------------------------
-        # draw sum of objects above original image
+        # BATCH DETECT MODULE
+        # f.close()
+        # return
         # -----------------------------------------------------------
-        # plastic count:
-        # (0,0)------(w,0)
-        # |              |
-        # |              |
-        # |              |
-        # |              |
-        # (0,h)------(w,h)
-        # -----------------------------------------------------------
-        image_w, image_h = image.size # width and height of original image
-        image = image.crop((0, -25, image_w, image_h))
-        draw2 = ImageDraw.Draw(image)
-        draw2.text((5, 0), "plastic count: " + str(out_boxes.shape[0]), (255, 255, 255), font=font)
-        # -----------------------------------------------------------
-        del draw2
-        del draw
-        return image
-        f.close()
-        return
 
     # -----------------------------------------------------------
     # get FPS
+    # -----------------------------------------------------------
+    # includes inference, score filtering, non-maximal suppression
+    # does NOT include pre-processing (normalization and resizing) and draw
+    # default test using test/test.jpg
+    # note that the FPS when using camera will be lower than this value
+    # due to frame limites of camera and preprocessing and draw process
     # -----------------------------------------------------------
     def get_FPS(self, image, test_interval):
         if self.letterbox_image:
             boxed_image = letterbox_image(image, (self.model_image_size[1],self.model_image_size[0]))
         else:
-            boxed_image = image.convert('RGB')
+            boxed_image = image.convert('RGB') # 
             boxed_image = boxed_image.resize((self.model_image_size[1],self.model_image_size[0]), Image.BICUBIC)
         image_data = np.array(boxed_image, dtype='float32')
         image_data /= 255.
