@@ -187,6 +187,7 @@ class YOLO(object):
 
             # draw boxes
             label = '{} {:.2f}'.format(predicted_class, score)
+            global draw
             draw = ImageDraw.Draw(image)
             label_size = draw.textsize(label, font)
             label = label.encode('utf-8')
@@ -269,8 +270,8 @@ class YOLO(object):
         # draw1.rectangle(((0, 0), (158, 36)), fill=(200, 200, 200, 66))
         # draw.text((5, 5), "plastic count: " + str(out_boxes.shape[0]), (0, 0, 0), font=font)
         # del draw1
-        del draw2
-        del draw
+        #del draw2
+        #del draw
         return image
         # -----------------------------------------------------------
         # BATCH DETECT MODULE
