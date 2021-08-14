@@ -1,10 +1,18 @@
-# coding=utf-8
+# -*- coding: utf-8 -*-
+##############################
+# python version check
+import sys
+if sys.version_info[0] < 3:
+    raise Exception("Python 3.6.9 is required.")
+##############################
+# start measurement of execution time
+import utils.timing as timing
+##############################
 import os
 # from os import listdir
 # from os.path import isfile, join
 from pathlib import Path
 # import glob
-import time
 import argparse
 import cv2
 import numpy as np
@@ -34,15 +42,17 @@ if not os.path.exists("./prediction"):
 
 if __name__ == "__main__":
     yolo = YOLO()
+    #print("Dependencies loaded in --- %s seconds ---" % (time.time() - start_time)) # measurement
+    timing.log
     mode = args.mode
-    # -----------------------------------------------------------
+    # --------------------------------
     # '--mode=':
     # 'image'   to predict single image
     # 'batch'   to predict all images in folder
     # 'video'   for video prediction
     # 'camera'  to predict using camera
     # 'fps'     returns the FPS value
-    # -----------------------------------------------------------
+    # --------------------------------
 #############IMAGE##############
     if mode == "image":
        while True:
@@ -70,15 +80,14 @@ if __name__ == "__main__":
                 r_image.save(os.path.join("./prediction/", image_id))
 #############VIDEO##############   
     elif mode == "video":
-        # -----------------------------------------------------------
+        # --------------------------------------------------------------
         # use ctrl+c to save video
         # DO NOT exit directly after prediction
-        # -----------------------------------------------------------
+        # --------------------------------------------------------------
         # specify video path
-        video_path      = args.vid    # path of the video
-        video_save_path = args.saveto # path to save the video
-        # video_save_path = "" means no save
-        video_fps       = 60.0        # fps of the output video
+        video_path      = args.vid      # path of the video
+        video_save_path = args.saveto   # path to save the video. video_save_path = "" means no save
+        video_fps       = 60.0          # set fps of the output video
         #############
         capture=cv2.VideoCapture(video_path)
         if video_save_path!="":
@@ -108,15 +117,16 @@ if __name__ == "__main__":
             if c==27:
                 capture.release()
                 break
+
         capture.release()
         out.release()
         cv2.destroyAllWindows()
 #############CAMERA##############   
     elif mode == "camera":
-        # -----------------------------------------------------------
+        # --------------------------------------------------------------
         # use ctrl+c to save video
         # DO NOT exit directly after prediction
-        # -----------------------------------------------------------
+        # --------------------------------------------------------------
         # specify video path
         video_path      = 0  # video_path=0 means detect using camera
         video_save_path = args.saveto     # path to save the video 
@@ -156,13 +166,13 @@ if __name__ == "__main__":
         cv2.destroyAllWindows()
 #############FPS##############
     elif mode == "fps":
-        # -----------------------------------------------------------
+        # --------------------------------------------------------------
         # includes inference, score filtering, non-maximal suppression
         # does NOT include pre-processing (normalization and resizing) and draw
         # default test using test/test.jpg
         # note that the FPS when using camera will be lower than this value
         # due to frame limites of camera and preprocessing and draw process
-        # -----------------------------------------------------------
+        # --------------------------------------------------------------
         test_interval = 100
         img = args.img
         image = Image.open(img)
