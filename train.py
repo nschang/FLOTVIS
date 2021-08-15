@@ -67,7 +67,7 @@ def data_generator(annotation_lines, batch_size, input_shape, anchors, num_class
 # -----------------------------------------------------------
 def preprocess_true_boxes(true_boxes, input_shape, anchors, num_classes):
     assert (true_boxes[..., 4]<num_classes).all(), 'class id must be less than num_classes'
-    # three feature layers
+    # three layers of feature map
     num_layers = len(anchors)//3
     # -----------------------------------------------------------
     # 13x13 feature layer has anchor [142, 110], [192, 243], [459, 401]
