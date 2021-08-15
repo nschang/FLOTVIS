@@ -94,16 +94,60 @@ def yolo_head(feats, anchors, num_classes, input_shape, calc_loss=False):
     return box_xy, box_wh, box_confidence, box_class_probs
 
 # --------------------------------------------------------------
+# get box position and score
+# --------------------------------------------------------------
+def yolo_boxes_and_scores(feats, anchors, num_classes, input_shape, image_shape, letterbox_image):
+    # --------------------------------------------------------------
+    # adjust predict value to true value
+    # box_xy = center point of box = -1,13,13,3,2; 
+    # box_wh = width and height of box = -1,13,13,3,2; 
+    # box_confidence : -1,13,13,3,1; 
+    # box_class_probs : -1,13,13,3,80;
+    # --------------------------------------------------------------
+    box_xy, box_wh, box_confidence, box_class_probs = yolo_head(feats, anchors, num_classes, input_shape)
+    # --------------------------------------------------------------
+    # letterbox_image adds gray bars to sides of image
+    # box_xy, box_wh are relative to image with gray bar
+    # the gray bars need to be removed in order to
+    # convert box_xy, box_wh to y_min,y_max,xmin,xmax
+    # --------------------------------------------------------------
+    if letterbox_image:
+        boxes = yolo_correct_boxes(box_xy, box_wh, input_shape, image_shape)
+    else:
+        box_yx = box_xy[..., ::-1]
+        box_hw = box_wh[..., ::-1]
+        box_mins = box_yx - (box_hw / 2.)
+        box_maxes = box_yx + (box_hw / 2.)
+
+        input_shape = K.cast(input_shape, K.dtype(box_yx))
+        image_shape = K.cast(image_shape, K.dtype(box_yx))
+
+        boxes =  K.concatenate([
+            box_mins[..., 0:1] * image_shape[0],  # y_min
+            box_mins[..., 1:2] * image_shape[1],  # x_min
+            box_maxes[..., 0:1] * image_shape[0],  # y_max
+            box_maxes[..., 1:2] * image_shape[1]  # x_max
+        ])
+    # --------------------------------------------------------------
+    # get final score and box position
+    # --------------------------------------------------------------
+    boxes = K.reshape(boxes, [-1, 4])
+    box_scores = box_confidence * box_class_probs
+    box_scores = K.reshape(box_scores, [-1, num_classes])
+    return boxes, box_scores
+    
+# --------------------------------------------------------------
 # predict image
 # --------------------------------------------------------------
 # yolo_process handles post-processing of detection result
 # which includes Decoding, Non-Maximum Suppression (NMS),
 # Thresholding, etc.
 # -----------------------------------------------------------
-def yolo_eval(yolo_outputs,
+def yolo_process(yolo_outputs,
             anchors,
             num_classes,
             image_shape,
+            input_shape,
             # ------------------------------
             # anchor of feature layer 13x13: 
             # [142, 110], [192, 243], [459, 401]
@@ -112,23 +156,19 @@ def yolo_eval(yolo_outputs,
             # anchor of feature layer 52x52: 
             # [12, 16], [19, 36], [40, 28]
             # ------------------------------
-            max_boxes         = 20,
-            score_threshold   = .6,
-            iou_threshold     = .5,
-            letterbox_image   = True):
+            anchor_mask     = [[6, 7, 8], [3, 4, 5], [0, 1, 2]],
+            max_boxes       = 100,
+            score_threshold = .5,
+            iou_threshold   = .3,
+            letterbox_image = True):
     # --------------------------------------------------------------
     # number of valid feature layers = 3
     # --------------------------------------------------------------
     num_layers = len(yolo_outputs)
-
-    anchor_mask = [[6,7,8], [3,4,5], [0,1,2]]
-    
     # --------------------------------------------------------------
     # get size of input image (416x416 or 608x608)
     # --------------------------------------------------------------
     input_shape = K.shape(yolo_outputs[0])[1:3] * 32
-    boxes = []
-    box_scores = []
     # --------------------------------------------------------------
     # process each feature layer
     # --------------------------------------------------------------
@@ -136,6 +176,12 @@ def yolo_eval(yolo_outputs,
         _boxes, _box_scores = yolo_boxes_and_scores(yolo_outputs[l], anchors[anchor_mask[l]], num_classes, input_shape, image_shape, letterbox_image)
         boxes.append(_boxes)
         box_scores.append(_box_scores)
+
+    boxes = []
+    box_wh = []
+    box_scores = []
+    box_class_probs = []
+
     # --------------------------------------------------------------
     # letterbox_image adds gray bars to sides of image
     # box_xy, box_wh are relative to image with gray bar
