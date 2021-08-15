@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import tensorflow as tf
 from keras import backend as K
 
@@ -6,7 +7,7 @@ from keras import backend as K
 # --------------------------------------------------------------
 def yolo_correct_boxes(box_xy, box_wh, input_shape, image_shape, letterbox_image):
     # --------------------------------------------------------------
-    # put y_axis above to multiply width and height of box and image
+    # put y_axis above to multiply width and height of boxes and image
     # --------------------------------------------------------------
     box_yx      = box_xy[..., ::-1]
     box_hw      = box_wh[..., ::-1]
@@ -16,7 +17,7 @@ def yolo_correct_boxes(box_xy, box_wh, input_shape, image_shape, letterbox_image
     
     if letterbox_image:
         # --------------------------------------------------------------
-        # offset of the effective area relative to the top left corner of the image
+        # offset of effective area relative to the top left corner of image
         # new_shape is the scale of width and height
         # --------------------------------------------------------------
         new_shape   = K.round(image_shape * K.min(input_shape / image_shape))
@@ -41,7 +42,7 @@ def yolo_correct_boxes(box_xy, box_wh, input_shape, image_shape, letterbox_image
 # --------------------------------------------------------------
 # get anchor and decode
 # --------------------------------------------------------------
-def yolo_head(feats, anchors, num_classes, input_shape, calc_loss=False):
+def yolo_anchor_decode(feats, anchors, num_classes, input_shape, calc_loss=False):
     num_anchors = len(anchors)
 
     # --------------------------------------------------------------
@@ -65,33 +66,33 @@ def yolo_head(feats, anchors, num_classes, input_shape, calc_loss=False):
     # adjust prediction to (batch_size,13,13,3,85)
     # 85 = 4 + 1 + 80
     # where: 4  = parameter for width and height adjustment
-    #        1  = confidence level of box
-    #        80 = confidence level of class
+    #        1  = confidence score of boxes
+    #        80 = confidence score of class
     # --------------------------------------------------------------
     feats = K.reshape(feats, [-1, grid_shape[0], grid_shape[1], num_anchors, num_classes + 5])
 
     # --------------------------------------------------------------
     # decode anchor box and normalize
-    # box_xy = center point of box
-    # box_wh = width and height of box
+    # box_xy = center of boxes
+    # box_wh = width and height of boxes
     # --------------------------------------------------------------    
     box_xy = (K.sigmoid(feats[..., :2]) + grid) / K.cast(grid_shape[::-1], K.dtype(feats))
     #box_xy = (K.sigmoid(feats[..., :2]) + grid) / K.cast(grid_shape[...,::-1], K.dtype(feats))
     box_wh = K.exp(feats[..., 2:4]) * anchors_tensor / K.cast(input_shape[::-1], K.dtype(feats))
     #box_wh = K.exp(feats[..., 2:4]) * anchors_tensor / K.cast(input_shape[...,::-1], K.dtype(feats))
     # --------------------------------------------------------------
-    # return confidence level of prediction box
+    # return confidence score of prediction box
     # --------------------------------------------------------------
-    box_confidence  = K.sigmoid(feats[..., 4:5])
-    box_class_probs = K.sigmoid(feats[..., 5:])
+    box_scores  = K.sigmoid(feats[..., 4:5])
+    box_class_scores = K.sigmoid(feats[..., 5:])
 
     # --------------------------------------------------------------
     # return grid, feats, box_xy, box_wh for loss calculation
-    # return box_xy, box_wh, box_confidence, box_class_probs at prediction
+    # return box_xy, box_wh, box_scores, box_class_scores at prediction
     # --------------------------------------------------------------
     if calc_loss == True:
         return grid, feats, box_xy, box_wh
-    return box_xy, box_wh, box_confidence, box_class_probs
+    return box_xy, box_wh, box_scores, box_class_scores
 
 # --------------------------------------------------------------
 # get box position and score
@@ -99,12 +100,12 @@ def yolo_head(feats, anchors, num_classes, input_shape, calc_loss=False):
 def yolo_boxes_and_scores(feats, anchors, num_classes, input_shape, image_shape, letterbox_image):
     # --------------------------------------------------------------
     # adjust predict value to true value
-    # box_xy = center point of box = -1,13,13,3,2; 
-    # box_wh = width and height of box = -1,13,13,3,2; 
-    # box_confidence : -1,13,13,3,1; 
-    # box_class_probs : -1,13,13,3,80;
+    # box_xy = center of boxes = -1,13,13,3,2; 
+    # box_wh = width and height of boxes = -1,13,13,3,2; 
+    # box_scores : -1,13,13,3,1; 
+    # box_class_scores : -1,13,13,3,80;
     # --------------------------------------------------------------
-    box_xy, box_wh, box_confidence, box_class_probs = yolo_head(feats, anchors, num_classes, input_shape)
+    box_xy, box_wh, box_scores, box_class_scores = yolo_head(feats, anchors, num_classes, input_shape)
     # --------------------------------------------------------------
     # letterbox_image adds gray bars to sides of image
     # box_xy, box_wh are relative to image with gray bar
@@ -132,7 +133,7 @@ def yolo_boxes_and_scores(feats, anchors, num_classes, input_shape, image_shape,
     # get final score and box position
     # --------------------------------------------------------------
     boxes = K.reshape(boxes, [-1, 4])
-    box_scores = box_confidence * box_class_probs
+    box_scores = box_scores * box_class_scores
     box_scores = K.reshape(box_scores, [-1, num_classes])
     return boxes, box_scores
     
@@ -148,40 +149,41 @@ def yolo_process(yolo_outputs,
             num_classes,
             image_shape,
             input_shape,
-            # ------------------------------
-            # anchor of feature layer 13x13: 
-            # [142, 110], [192, 243], [459, 401]
-            # anchor of feature layer 26x26: 
-            # [36, 75], [76, 55], [72, 146]
-            # anchor of feature layer 52x52: 
-            # [12, 16], [19, 36], [40, 28]
-            # ------------------------------
+            # -----------------------------------------------------------
+            # anchor of feature layer 13x13 = [142, 110], [192, 243], [459, 401]
+            # anchor of feature layer 26x26 = [36, 75], [76, 55], [72, 146]
+            # anchor of feature layer 52x52 = [12, 16], [19, 36], [40, 28]
+            # -----------------------------------------------------------
             anchor_mask     = [[6, 7, 8], [3, 4, 5], [0, 1, 2]],
             max_boxes       = 100,
             score_threshold = .5,
             iou_threshold   = .3,
             letterbox_image = True):
     # --------------------------------------------------------------
-    # number of valid feature layers = 3
+    # number of valid layers of feature map = 3
     # --------------------------------------------------------------
     num_layers = len(yolo_outputs)
     # --------------------------------------------------------------
-    # get size of input image (416x416 or 608x608)
+    # size of input image = 416x416 or 608x608
     # --------------------------------------------------------------
     input_shape = K.shape(yolo_outputs[0])[1:3] * 32
     # --------------------------------------------------------------
-    # process each feature layer
-    # --------------------------------------------------------------
-    for l in range(num_layers):
-        _boxes, _box_scores = yolo_boxes_and_scores(yolo_outputs[l], anchors[anchor_mask[l]], num_classes, input_shape, image_shape, letterbox_image)
-        boxes.append(_boxes)
-        box_scores.append(_box_scores)
-
-    boxes = []
-    box_wh = []
-    box_scores = []
-    box_class_probs = []
-
+    # process each feature layer and stack results
+    box_xy           = []
+    box_wh           = []
+    box_scores       = []
+    box_class_scores = []
+    for l in range(len(yolo_outputs)):
+        sub_box_xy, sub_box_wh, sub_box_scores, sub_box_class_scores = \
+            yolo_head(yolo_outputs[l], anchors[anchor_mask[l]], num_classes, input_shape)
+        box_xy.append(K.reshape(sub_box_xy, [-1, 2]))
+        box_wh.append(K.reshape(sub_box_wh, [-1, 2]))
+        box_scores.append(K.reshape(sub_box_scores, [-1, 1]))
+        box_class_scores.append(K.reshape(sub_box_class_scores, [-1, num_classes]))
+    box_xy           = K.concatenate(box_xy, axis = 0)
+    box_wh           = K.concatenate(box_wh, axis = 0)
+    box_scores       = K.concatenate(box_scores, axis=0)
+    box_class_scores = K.concatenate(box_class_scores, axis = 0)
     # --------------------------------------------------------------
     # letterbox_image adds gray bars to sides of image
     # box_xy, box_wh are relative to image with gray bar
@@ -189,35 +191,27 @@ def yolo_process(yolo_outputs,
     # convert box_xy, box_wh to y_min,y_max,xmin,xmax
     # --------------------------------------------------------------
     boxes       = yolo_correct_boxes(box_xy, box_wh, input_shape, image_shape, letterbox_image)
-    box_scores  = box_confidence * box_class_probs
-    # --------------------------------------------------------------
-    # stack result of each feature layer
-    # --------------------------------------------------------------
-    boxes       = K.concatenate(boxes, axis=0)
-    box_scores  = K.concatenate(box_scores, axis=0)
-
+    box_scores  = box_scores * box_class_scores
     # --------------------------------------------------------------
     # compare if score >= score_threshold
     # --------------------------------------------------------------
-    mask = box_scores  >= score_threshold
-    max_boxes_tensor    = K.constant(max_boxes, dtype='int32')
-    boxes_out      = []
-    scores_out     = []
-    classes_out    = []
+    mask             = box_scores >= score_threshold
+    max_boxes_tensor = K.constant(max_boxes, dtype='int32')
+    boxes_out        = []
+    scores_out       = []
+    classes_out      = []
     for c in range(num_classes):
         # --------------------------------------------------------------
-        # get box_scores >= score_threshold
+        # get boxes and scores where box_scores >= score_threshold
         # --------------------------------------------------------------
         class_boxes         = tf.boolean_mask(boxes, mask[:, c])
         class_box_scores    = tf.boolean_mask(box_scores[:, c], mask[:, c])
-
         # --------------------------------------------------------------
         # non-maximal suppression
         # keep boxes with best score
         # --------------------------------------------------------------
         nms_index = tf.image.non_max_suppression(class_boxes, 
         class_box_scores, max_boxes_tensor, iou_threshold=iou_threshold)
-
         # --------------------------------------------------------------
         # get result after non-maximal suppression
         # including box position, score and class
@@ -246,7 +240,7 @@ if __name__ == "__main__":
         return s
 
     # 13x13
-    def yolo_head(feats, anchors, num_classes):
+    def yolo_anchor_decode(feats, anchors, num_classes):
         # --------------------------------------------------------------
         # feats         [batch_size, 13, 13, 3 * (5 + num_classes)]
         # anchors       [3, 2]
@@ -279,21 +273,21 @@ if __name__ == "__main__":
         # adjust prediction to (batch_size,13,13,3,85)
         # 85 = 4 + 1 + 80
         # where: 4  = parameter for width and height adjustment
-        #        1  = confidence level of box
-        #        80 = confidence level of class
+        #        1  = confidence score of boxes
+        #        80 = confidence score of class
         # --------------------------------------------------------------
         feats = np.reshape(feats, [-1, grid_shape[0], grid_shape[1], num_anchors, num_classes + 5])
         # --------------------------------------------------------------
         # decode anchor box and normalize
-        # box_xy = center of box
-        # box_wh = width and height of box
+        # box_xy = center of boxes
+        # box_wh = width and height of boxes
         # --------------------------------------------------------------
         box_xy = (sigmoid(feats[..., :2]) + grid)
         box_wh = np.exp(feats[..., 2:4]) * anchors_tensor
         
         # confidence of prediction box
-        box_confidence  = sigmoid(feats[..., 4:5])
-        box_class_probs = sigmoid(feats[..., 5:])
+        box_scores  = sigmoid(feats[..., 4:5])
+        box_class_scores = sigmoid(feats[..., 5:])
 
         box_wh = box_wh / 32
         anchors_tensor = anchors_tensor / 32
