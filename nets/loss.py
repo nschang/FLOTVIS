@@ -72,8 +72,8 @@ def yolo_head(feats, anchors, num_classes, input_shape, calc_loss=False):
 # compute iou between anchor box and ground truth bounding box
 # --------------------------------------------------------------
 def box_iou(b1, b2):
-    13,13,3,1,4
-    # coordinate of upper left and lower right corner
+    # 13,13,3,1,4
+    # coordinate of top left and bottom right corners
     b1 = K.expand_dims(b1, -2)
     b1_xy = b1[..., :2]
     b1_wh = b1[..., 2:4]
@@ -81,8 +81,8 @@ def box_iou(b1, b2):
     b1_mins = b1_xy - b1_wh_half
     b1_maxes = b1_xy + b1_wh_half
 
-    1,n,4
-    # coordinate of upper left and lower right corner
+    # 1,n,4
+    # coordinate of top left and bottom right corners
     b2 = K.expand_dims(b2, 0)
     b2_xy = b2[..., :2]
     b2_wh = b2[..., 2:4]

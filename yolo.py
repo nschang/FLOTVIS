@@ -10,7 +10,8 @@ from keras.layers import Input
 from keras.models import load_model
 from PIL import Image, ImageFont, ImageDraw, ImageOps
 
-from nets.yolo4 import yolo_body, yolo_eval
+from nets.yolo4 import yolo_body
+from utils.utils_anchors import yolo_process
 from utils.utils import letterbox_image
 
 # -----------------------------------------------------------
@@ -114,11 +115,11 @@ class YOLO(object):
         self.input_image_shape = K.placeholder(shape=(2, ))
 
         # -----------------------------------------------------------
-        # yolo_eval handles post-processing of detection result
+        # yolo_process handles post-processing of detection result
         # which includes Decoding, Non-Maximum Suppression (NMS),
         # Thresholding, etc.
         # -----------------------------------------------------------
-        boxes, scores, classes = yolo_eval(self.yolo_model.output, self.anchors,
+        boxes, scores, classes = yolo_process(self.yolo_model.output, self.anchors,
                 num_classes, self.input_image_shape, max_boxes = self.max_boxes,
                 score_threshold = self.score, iou_threshold = self.iou, letterbox_image = self.letterbox_image)
         return boxes, scores, classes
