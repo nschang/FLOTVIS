@@ -22,7 +22,7 @@ from PIL import Image
 # from keras.layers import Input
 # from keras.models import load_model
 from yolo import YOLO
-# from nets.yolo4 import yolo_body, yolo_eval
+# from nets.yolo4 import yolo_body, yolo_process
 # from utils.utils import letterbox_image
 
 parser = argparse.ArgumentParser()
