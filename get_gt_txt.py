@@ -11,12 +11,12 @@ import xml.etree.ElementTree as ET
 # -----------------------------------------------------------
 def get_classes(classes_path):
     # -----------------------------------------------------------
-    # loads the classes
+    # load class(es)
     # -----------------------------------------------------------
-    with open(classes_path) as f:
+    with open(classes_path, encoding='utf-8') as f:
         class_names = f.readlines()
     class_names = [c.strip() for c in class_names]
-    return class_names
+    return class_names, len(class_names)
 
 image_ids = open('VOCdevkit/VOC2007/ImageSets/Main/test.txt').read().strip().split()
 
@@ -32,7 +32,7 @@ for image_id in image_ids:
             difficult_flag = False
             if obj.find('difficult')!=None:
                 difficult = obj.find('difficult').text
-                if int(difficult)==1:
+                if int(difficult) == 1:
                     difficult_flag = True
             obj_name = obj.find('name').text
             # -----------------------------------------------------------

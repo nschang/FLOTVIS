@@ -40,6 +40,7 @@ def yolo_head(feats, anchors, num_classes, input_shape, calc_loss=False):
     # adjust prediction to (batch_size,13,13,3,85)
     # 85 = 4 + 1 + 80
     # where: 4  = parameter for width and height adjustment
+    #           = center of box and width, height
     #        1  = confidence score of boxes
     #        80 = confidence score of class
     # --------------------------------------------------------------

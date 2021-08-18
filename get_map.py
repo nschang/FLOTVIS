@@ -1,9 +1,16 @@
 # -----------------------------------------------------------
 # modified from https://github.com/Cartucho/mAP
 # -----------------------------------------------------------
+import os
+from PIL import Image
+from tqdm import tqdm
+from utils.utils import get_classes
+from utils.utils_map import get_coco_map, get_map
+from yolo import YOLO
+
 import glob
 import json
-import os
+
 import shutil
 import operator
 import sys
@@ -713,7 +720,7 @@ with open(results_files_path + "/results.txt", 'w') as results_file:
         #print(rec)
         
         ap, mrec, mprec = voc_ap(rec[:], prec[:])
-        F1 = np.array(rec)*np.array(prec)*2 / np.where((np.array(prec)+np.array(rec))==0, 1, (np.array(prec)+np.array(rec)))
+        F1 = np.array(rec)*np.array(prec) * 2 / np.where((np.array(prec)+np.array(rec))==0, 1, (np.array(prec) + np.array(rec)))
 
         sum_AP += ap
         text = "{0:.2f}%".format(ap*100) + " = " + class_name + " AP " #class_name + " AP = {0:.2f}%".format(ap*100)

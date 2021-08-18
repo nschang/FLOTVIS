@@ -46,7 +46,7 @@ def box_ciou(b1, b2):
     iou = intersect_area / K.maximum(union_area, K.epsilon())
 
     # --------------------------------------------------------------
-    # compute distance to center of cells
+    # compute distance to center of boxes
     # center_distance (batch, feat_w, feat_h, anchor_num)
     # --------------------------------------------------------------
     center_distance = K.sum(K.square(b1_xy - b2_xy), axis=-1)
