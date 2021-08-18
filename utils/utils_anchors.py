@@ -3,7 +3,7 @@ import tensorflow as tf
 from keras import backend as K
 
 # --------------------------------------------------------------
-# adjust box size relative to image size
+# adjust ground truth bounding box size relative to image size
 # --------------------------------------------------------------
 def yolo_correct_boxes(box_xy, box_wh, input_shape, image_shape, letterbox_image):
     # --------------------------------------------------------------
@@ -66,6 +66,7 @@ def yolo_anchor_decode(feats, anchors, num_classes, input_shape, calc_loss=False
     # adjust prediction to (batch_size,13,13,3,85)
     # 85 = 4 + 1 + 80
     # where: 4  = parameter for width and height adjustment
+    #           = center of box and width, height
     #        1  = confidence score of boxes
     #        80 = confidence score of class
     # --------------------------------------------------------------
@@ -108,7 +109,7 @@ def yolo_boxes_and_scores(feats, anchors, num_classes, input_shape, image_shape,
     box_xy, box_wh, box_scores, box_class_scores = yolo_head(feats, anchors, num_classes, input_shape)
     # --------------------------------------------------------------
     # letterbox_image adds gray bars to sides of image
-    # box_xy, box_wh are relative to image with gray bar
+    # box_xy, box_wh are relative to image with gray bars
     # the gray bars need to be removed in order to
     # convert box_xy, box_wh to y_min,y_max,xmin,xmax
     # --------------------------------------------------------------
@@ -186,7 +187,7 @@ def yolo_process(yolo_outputs,
     box_class_scores = K.concatenate(box_class_scores, axis = 0)
     # --------------------------------------------------------------
     # letterbox_image adds gray bars to sides of image
-    # box_xy, box_wh are relative to image with gray bar
+    # box_xy, box_wh are relative to image with gray bars
     # the gray bars need to be removed in order to
     # convert box_xy, box_wh to y_min,y_max,xmin,xmax
     # --------------------------------------------------------------
@@ -273,6 +274,7 @@ if __name__ == "__main__":
         # adjust prediction to (batch_size,13,13,3,85)
         # 85 = 4 + 1 + 80
         # where: 4  = parameter for width and height adjustment
+        #           = center of box and width, height
         #        1  = confidence score of boxes
         #        80 = confidence score of class
         # --------------------------------------------------------------
