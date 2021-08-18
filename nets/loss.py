@@ -125,9 +125,9 @@ def yolo_loss(args,
     yolo_outputs = args[:num_layers]
 
     # --------------------------------------------------------------
-    # anchor of feature layer 13x13 = [142, 110], [192, 243], [459, 401]
-    # anchor of feature layer 26x26 = [36, 75], [76, 55], [72, 146]
-    # anchor of feature layer 52x52 = [12, 16], [19, 36], [40, 28]
+    # anchor of feature layer 13x13 is [142, 110], [192, 243], [459, 401]
+    # anchor of feature layer 26x26 is [36, 75], [76, 55], [72, 146]
+    # anchor of feature layer 52x52 is [12, 16], [19, 36], [40, 28]
     # --------------------------------------------------------------
     anchor_mask = [[6,7,8], [3,4,5], [0,1,2]] if num_layers==3 else [[3,4,5], [1,2,3]]
 

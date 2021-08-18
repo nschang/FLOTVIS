@@ -42,14 +42,14 @@ def yolo_correct_boxes(box_xy, box_wh, input_shape, image_shape, letterbox_image
 # --------------------------------------------------------------
 # get anchor and decode
 # --------------------------------------------------------------
-def yolo_anchor_decode(feats, anchors, num_classes, input_shape, calc_loss=False):
+def yolo_anchor_decode(feats, anchors, num_classes, input_shape, calc_loss=False): # same as yolo_head
     num_anchors = len(anchors)
 
     # --------------------------------------------------------------
     # get coordinates of each feature point
     # shape is  (13, 13, num_anchors, 2)
-    # grid_x    [13, 13, 3, 1]
     # grid_y    [13, 13, 3, 1]
+    # grid_x    [13, 13, 3, 1]
     # grid      [13, 13, 3, 2]
     # --------------------------------------------------------------
     grid_shape = K.shape(feats)[1:3]
@@ -96,49 +96,6 @@ def yolo_anchor_decode(feats, anchors, num_classes, input_shape, calc_loss=False
     return box_xy, box_wh, box_scores, box_class_scores
 
 # --------------------------------------------------------------
-# get box position and score
-# --------------------------------------------------------------
-def yolo_boxes_and_scores(feats, anchors, num_classes, input_shape, image_shape, letterbox_image):
-    # --------------------------------------------------------------
-    # adjust predict value to true value
-    # box_xy = center of boxes = -1,13,13,3,2; 
-    # box_wh = width and height of boxes = -1,13,13,3,2; 
-    # box_scores : -1,13,13,3,1; 
-    # box_class_scores : -1,13,13,3,80;
-    # --------------------------------------------------------------
-    box_xy, box_wh, box_scores, box_class_scores = yolo_head(feats, anchors, num_classes, input_shape)
-    # --------------------------------------------------------------
-    # letterbox_image adds gray bars to sides of image
-    # box_xy, box_wh are relative to image with gray bars
-    # the gray bars need to be removed in order to
-    # convert box_xy, box_wh to y_min,y_max,xmin,xmax
-    # --------------------------------------------------------------
-    if letterbox_image:
-        boxes = yolo_correct_boxes(box_xy, box_wh, input_shape, image_shape)
-    else:
-        box_yx = box_xy[..., ::-1]
-        box_hw = box_wh[..., ::-1]
-        box_mins = box_yx - (box_hw / 2.)
-        box_maxes = box_yx + (box_hw / 2.)
-
-        input_shape = K.cast(input_shape, K.dtype(box_yx))
-        image_shape = K.cast(image_shape, K.dtype(box_yx))
-
-        boxes =  K.concatenate([
-            box_mins[..., 0:1] * image_shape[0],  # y_min
-            box_mins[..., 1:2] * image_shape[1],  # x_min
-            box_maxes[..., 0:1] * image_shape[0],  # y_max
-            box_maxes[..., 1:2] * image_shape[1]  # x_max
-        ])
-    # --------------------------------------------------------------
-    # get final score and box position
-    # --------------------------------------------------------------
-    boxes = K.reshape(boxes, [-1, 4])
-    box_scores = box_scores * box_class_scores
-    box_scores = K.reshape(box_scores, [-1, num_classes])
-    return boxes, box_scores
-    
-# --------------------------------------------------------------
 # predict image
 # --------------------------------------------------------------
 # yolo_process handles post-processing of detection result
@@ -151,9 +108,9 @@ def yolo_process(yolo_outputs,
             image_shape,
             input_shape,
             # -----------------------------------------------------------
-            # anchor of feature layer 13x13 = [142, 110], [192, 243], [459, 401]
-            # anchor of feature layer 26x26 = [36, 75], [76, 55], [72, 146]
-            # anchor of feature layer 52x52 = [12, 16], [19, 36], [40, 28]
+            # anchor of feature layer 13x13 is [142, 110], [192, 243], [459, 401]
+            # anchor of feature layer 26x26 is [36, 75], [76, 55], [72, 146]
+            # anchor of feature layer 52x52 is [12, 16], [19, 36], [40, 28]
             # -----------------------------------------------------------
             anchor_mask     = [[6, 7, 8], [3, 4, 5], [0, 1, 2]],
             max_boxes       = 100,
@@ -256,12 +213,12 @@ if __name__ == "__main__":
         # --------------------------------------------------------------
         # get coordinates of each feature point
         # shape is  (13, 13, num_anchors, 2)
-        # grid_x    [13, 13, 3, 1]
         # grid_y    [13, 13, 3, 1]
+        # grid_x    [13, 13, 3, 1]
         # grid      [13, 13, 3, 2]
         # --------------------------------------------------------------
-        grid_y = np.tile(np.reshape(np.arange(0, stop=grid_shape[0]), [-1, 1, 1, 1]), [1, grid_shape[1], 1, 1])
-        grid_x = np.tile(np.reshape(np.arange(0, stop=grid_shape[1]), [1, -1, 1, 1]), [grid_shape[0], 1, 1, 1])
+        grid_y = np.tile(np.reshape(np.arange(0, stop=grid_shape[0]), [-1, 1, 1, 1]), [1, grid_shape[1], num_anchors, 1])
+        grid_x = np.tile(np.reshape(np.arange(0, stop=grid_shape[1]), [1, -1, 1, 1]), [grid_shape[0], 1, num_anchors, 1])
         grid = np.concatenate([grid_x, grid_y], -1)
         print(np.shape(grid))
         # --------------------------------------------------------------
@@ -338,4 +295,4 @@ if __name__ == "__main__":
         #
     feat = np.random.normal(0,0.5,[4,13,13,75])
     anchors = [[142, 110],[192, 243],[459, 401]]
-    yolo_head(feat,anchors,20)
+    yolo_anchor_decode(feat,anchors,20)
