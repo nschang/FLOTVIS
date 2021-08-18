@@ -240,14 +240,14 @@ class YoloDatasets(keras.utils.Sequence):
         box_datas = []
         index = 0
 
-        place_x = [int(w*min_offset_x) - nws[0], 
-                int(w*min_offset_x) - nws[1], 
-                int(w*min_offset_x), 
-                int(w*min_offset_x)]
-        place_y = [int(h*min_offset_y) - nhs[0], 
-                int(h*min_offset_y), 
-                int(h*min_offset_y), 
-                int(h*min_offset_y) - nhs[3]]
+        place_x = [int(w * min_offset_x) - nws[0], 
+                   int(w * min_offset_x) - nws[1], 
+                   int(w * min_offset_x), 
+                   int(w * min_offset_x)]
+        place_y = [int(h * min_offset_y) - nhs[0], 
+                   int(h * min_offset_y), 
+                   int(h * min_offset_y), 
+                   int(h * min_offset_y) - nhs[3]]
 
         for line in annotation_line:
             # split each line
@@ -269,16 +269,20 @@ class YoloDatasets(keras.utils.Sequence):
             nw = nws[index] 
             nh = nhs[index] 
 
-            # zoom input image
-            new_ar = w/h
-            scale = rand(scale_low, scale_high)
-            if new_ar < 1:
-                nh = int(scale*h)
-                nw = int(nh*new_ar)
-            else:
-                nw = int(scale*w)
-                nh = int(nw/new_ar)
-            image = image.resize((nw,nh), Image.BICUBIC)
+            # -----------------------------------------------------------
+            # replaced
+            # -----------------------------------------------------------
+            # # zoom input image
+            # new_ar = w/h
+            # scale = rand(scale_low, scale_high)
+            # if new_ar < 1:
+            #     nh = int(scale * h)
+            #     nw = int(nh * new_ar)
+            # else:
+            #     nw = int(scale * w)
+            #     nh = int(nw / new_ar)
+            # image = image.resize((nw,nh), Image.BICUBIC)
+            # -----------------------------------------------------------
 
             # place image according to four split images
             dx = place_x[index]
@@ -306,9 +310,17 @@ class YoloDatasets(keras.utils.Sequence):
             image_datas.append(image_data)
             box_datas.append(box_data)
 
-        # split image and place together
-        cutx = np.random.randint(int(w*min_offset_x), int(w*(1 - min_offset_x)))
-        cuty = np.random.randint(int(h*min_offset_y), int(h*(1 - min_offset_y)))
+        # cut image and place together
+        # -----------------------------------------------------------
+        # replaced
+        # -----------------------------------------------------------
+        # cutx = np.random.randint(int(w*min_offset_x), 
+        #                          int(w*(1 - min_offset_x)))
+        # cuty = np.random.randint(int(h*min_offset_y), 
+        #                          int(h*(1 - min_offset_y)))
+        # -----------------------------------------------------------
+        cutx = int(w * min_offset_x)
+        cuty = int(h * min_offset_y)
 
         new_image = np.zeros([h, w, 3])
         new_image[:cuty, :cutx, :] = image_datas[0][:cuty, :cutx, :]
@@ -331,7 +343,11 @@ class YoloDatasets(keras.utils.Sequence):
         x[x<0] = 0
         new_image = cv2.cvtColor(x, cv2.COLOR_HSV2RGB)*255 # numpy array, 0 to 1
 
-        new_image = Image.fromarray((image*255).astype(np.uint8))
+        # -----------------------------------------------------------
+        # replaced
+        # -----------------------------------------------------------
+        # new_image = Image.fromarray((image*255).astype(np.uint8))
+        # -----------------------------------------------------------
         
         # process box
         new_boxes = self.merge_bboxes(box_datas, cutx, cuty)
@@ -391,7 +407,7 @@ class YoloDatasets(keras.utils.Sequence):
         anchors      = np.expand_dims(anchors, 0)
         anchor_max = anchors / 2.
         anchor_min  = - anchor_max
-
+        # width, height valid only when width, height > 0
         valid_mask  = boxes_wh[..., 0] > 0
 
         for b in range(m):
