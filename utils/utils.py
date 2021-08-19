@@ -11,6 +11,9 @@ def compose(*funcs):
     else:
         raise ValueError('Composition of empty sequence not supported.')
 
+# -----------------------------------------------------------
+# cv2 convert to RGB to prevent grayscale error at prediction
+# -----------------------------------------------------------
 def cvtColor(image):
     if len(np.shape(image)) == 3 and np.shape(image)[-2] == 3:
         return image 

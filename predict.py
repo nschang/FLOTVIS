@@ -9,8 +9,7 @@ if sys.version_info[0] < 3:
 import utils.timing as timing
 ##############################
 import os
-# from os import listdir
-# from os.path import isfile, join
+import time
 from pathlib import Path
 # import glob
 import argparse
@@ -56,7 +55,7 @@ if __name__ == "__main__":
 #############IMAGE##############
     if mode == "image":
        while True:
-           img = args.img
+           img     = args.img
            imgpath = Path(args.img)
            #imgpath = Path(r"test/test1.jpg")
            try:
@@ -90,10 +89,10 @@ if __name__ == "__main__":
         video_fps       = 60.0          # set fps of the output video
         #############
         capture=cv2.VideoCapture(video_path)
-        if video_save_path!="":
-            fourcc = cv2.VideoWriter_fourcc(*'XVID')
-            size = (int(capture.get(cv2.CAP_PROP_FRAME_WIDTH)), int(capture.get(cv2.CAP_PROP_FRAME_HEIGHT)))
-            out = cv2.VideoWriter(video_save_path, fourcc, video_fps, size)
+        if video_save_path != "":
+            fourcc  = cv2.VideoWriter_fourcc(*'XVID')
+            size    = (int(capture.get(cv2.CAP_PROP_FRAME_WIDTH)), int(capture.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+            out     = cv2.VideoWriter(video_save_path, fourcc, video_fps, size)
 
         fps = 0.0
         while(True):
