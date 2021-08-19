@@ -6,32 +6,37 @@ import time
 
 import numpy as np
 from keras import backend as K
-from keras.layers import Input
-from keras.models import load_model
-from PIL import Image, ImageFont, ImageDraw, ImageOps
+from PIL import Image, ImageFont, ImageDraw
 
 from nets.yolo4 import yolo_body
 from utils.utils_anchors import yolo_process
-from utils.utils import letterbox_image
+from utils.utils import (cvtColor, get_anchors, get_classes, preprocess_input,
+                         resize_image)
 
-# -----------------------------------------------------------
-# Both model_path and classes_path need to be updated!
-# in case of shape mismatch error during training,
-# check model_path and classes_path .
-# -----------------------------------------------------------
-#class C_YOLO(YOLO):
 class YOLO(object):
     _defaults = {
+        # -----------------------------------------------------------
+        # Both model_path and classes_path need to be updated!
+        # check model_path and classes_path if shape mismatch error 
+        # -----------------------------------------------------------
         #"model_path"        : 'train/trained_weights_stage_1.h5',
         "model_path"        : 'model_data/trained_weights_stage_1.h5',
-        "anchors_path"      : 'model_data/yolo_anchors.txt',
         "classes_path"      : 'model_data/class.txt',
+        # text file with anchor box data
+        "anchors_path"      : 'model_data/yolo_anchors.txt',
+        # point to respective anchor box
+        "anchors_mask"      : [[6, 7, 8], [3, 4, 5], [0, 1, 2]],
+        # only keep achor boxes with confidence higher than this score
         "score"             : 0.1,
+        # size of iOU in non-maximal suppression
         "iou"               : 0.3,
+        # max number of boxes
         "max_boxes"         : 100,
-        "model_image_size"  : (608, 608), # use (416,416) or (608,608) depending on RAM size
+        # choose between (416,416) or (608,608) depending on RAM size
+        "model_image_size"  : (608, 608), # must be multiple of 32
         # -----------------------------------------------------------
         # toggle letterbox_image to resize input without distortion
+        # effect UNTESTED
         # -----------------------------------------------------------
         "letterbox_image"   : True,
     }
@@ -44,42 +49,34 @@ class YOLO(object):
             return "Unrecognized attribute name '" + n + "'"
 
     # -----------------------------------------------------------
-    # init yolo
+    # initialize yolo
     # -----------------------------------------------------------
     def __init__(self, **kwargs):
         self.__dict__.update(self._defaults)
-        self.class_names = self._get_class()
-        self.anchors = self._get_anchors()
-        self.sess = K.get_session()
+        for name, value in kwargs.items():
+            setattr(self, name, value)
+        # get class
+        self.class_names, self.num_classes = get_classes(self.classes_path)
+        # get anchors
+        self.anchors, self.num_anchors        = get_anchors(self.anchors_path)
+
+        # assign colors to boxes
+        hsv_tuples  = [(x / len(self.class_names), 1., 1.)
+                      for x in range(len(self.class_names))]
+        self.colors = list(map(lambda x: colorsys.hsv_to_rgb(*x), hsv_tuples))
+        self.colors = list(map(lambda x: (int(x[0] * 255), 
+                                          int(x[1] * 255), 
+                                          int(x[2] * 255)),
+                                          self.color
+                                          ))
+
+        self.sess                             = K.get_session()
         self.boxes, self.scores, self.classes = self.generate()
-
     # -----------------------------------------------------------
-    # get class
-    # -----------------------------------------------------------
-    def _get_class(self):
-        classes_path = os.path.expanduser(self.classes_path)
-        with open(classes_path) as f:
-            class_names = f.readlines()
-        class_names = [c.strip() for c in class_names]
-        return class_names
-
-    # -----------------------------------------------------------
-    # get anchor boxes
-    # -----------------------------------------------------------
-    def _get_anchors(self):
-        anchors_path = os.path.expanduser(self.anchors_path)
-        with open(anchors_path) as f:
-            anchors = f.readline()
-        anchors = [float(x) for x in anchors.split(',')]
-        return np.array(anchors).reshape(-1, 2)
-
-    # -----------------------------------------------------------
-    # load classes and pre-trained model
+    # load class and pre-trained model
     # -----------------------------------------------------------
     def generate(self):
-        #self.score = 0.01
-        #self.iou = 0.5
-        model_path = os.path.expanduser(self.model_path)
+        model_path  = os.path.expanduser(self.model_path)
         assert model_path.endswith('.h5'), 'Keras model or weights must be a .h5 file.'
 
         # get class and number of anchor boxes
@@ -99,14 +96,6 @@ class YOLO(object):
 
         print('{} model, anchors, and classes loaded.'.format(model_path))
 
-        # assign box colors
-        hsv_tuples = [(x / len(self.class_names), 1., 1.)
-                      for x in range(len(self.class_names))]
-        self.colors = list(map(lambda x: colorsys.hsv_to_rgb(*x), hsv_tuples))
-        self.colors = list(
-            map(lambda x: (int(x[0] * 255), int(x[1] * 255), int(x[2] * 255)),
-                self.colors))
-
         # randomize color
         np.random.seed(10101)
         np.random.shuffle(self.colors)
@@ -119,9 +108,16 @@ class YOLO(object):
         # which includes Decoding, Non-Maximum Suppression (NMS),
         # Thresholding, etc.
         # -----------------------------------------------------------
-        boxes, scores, classes = yolo_process(self.yolo_model.output, self.anchors,
-                num_classes, self.input_image_shape, max_boxes = self.max_boxes,
-                score_threshold = self.score, iou_threshold = self.iou, letterbox_image = self.letterbox_image)
+        boxes, scores, classes  = yolo_process(
+            self.yolo_model.output, 
+            self.anchors,
+            num_classes, 
+            self.input_image_shape, 
+            max_boxes       = self.max_boxes,
+            score_threshold = self.score, 
+            iou_threshold   = self.iou, 
+            letterbox_image = self.letterbox_image
+        )
         return boxes, scores, classes
 
 # -----------------------------------------------------------
@@ -131,25 +127,20 @@ class YOLO(object):
         # -----------------------------------------------------------
         # # BATCH DETECT MODULE 
         # write list of target images to a new txt file
-        # f = open("./test/"+image_id+".txt","w")
+        # f = open("./test/"+ image_id +".txt","w")
         # -----------------------------------------------------------
-        # # convert to RGB image to prevent error from grayscale image
-        image = image.convert('RGB')
-
-        # resize by adding gray bar to image
-        if self.letterbox_image:
-            boxed_image = letterbox_image(image, (self.model_image_size[1],self.model_image_size[0]))
-        else:
-            boxed_image = image.resize((self.model_image_size[1],self.model_image_size[0]), Image.BICUBIC)
-        image_data = np.array(boxed_image, dtype='float32')
-        image_data /= 255.
-        # add batch_size dimension
-        image_data = np.expand_dims(image_data, 0)
-
-        # load image to grid and detect
+        # cv2 convert to RGB to prevent grayscale error at prediction
+        image = cvtColor(image)
+        # resize, add gray bar to sides of image
+        image_data  = resize_image(image, (self.input_shape[1], self.input_shape[0]), self.letterbox_image)
+        # add batch_size dimension and normalize
+        image_data      = np.expand_dims(preprocess_input(np.array(image_data, dtype='float32')), 0)
+        # -----------------------------------------------------------
+        # load image to grid and predict
+        # -----------------------------------------------------------
         out_boxes, out_scores, out_classes = self.sess.run(
             [self.boxes, self.scores, self.classes],
-            feed_dict={
+            feed_dict = {
                 self.yolo_model.input: image_data,
                 self.input_image_shape: [image.size[1], image.size[0]],
                 K.learning_phase(): 0})
@@ -160,15 +151,15 @@ class YOLO(object):
         font_size = 1
         font_path = 'model_data/ArialUnicode.ttf'
         # set font
-        font = ImageFont.truetype(font=font_path,
+        font = ImageFont.truetype(font = font_path,
                      size=np.floor(3e-2 * image.size[1] + font_size).astype('int32'))
-        # thickness of prediction box
+        # set thickness of prediction box
         thickness = max((image.size[0] + image.size[1]) // 680, 1)
-
+        # draw image
         for i, c in list(enumerate(out_classes)):
-            predicted_class = self.class_names[c]
-            box = out_boxes[i]
-            score = out_scores[i]
+            predicted_class = self.class_names[int(c)]
+            box             = out_boxes[i]
+            score           = out_scores[i]
 
             # coordinate of prediction box
             top, left, bottom, right = box
@@ -176,20 +167,20 @@ class YOLO(object):
             # BATCH DETECT MODULE
             # f.write("%s %s %s %s %s %s\n" % (predicted_class, str(score)[:6], str(int(left)), str(int(top)), str(int(right)),str(int(bottom))))
             # -----------------------------------------------------------
-            top = top - 5
-            left = left - 5
+            top    = top - 5
+            left   = left - 5
             bottom = bottom + 5
-            right = right + 5
+            right  = right + 5
 
-            top = max(0, np.floor(top + 0.5).astype('int32'))
-            left = max(0, np.floor(left + 0.5).astype('int32'))
+            top    = max(0, np.floor(top + 0.5).astype('int32'))
+            left   = max(0, np.floor(left + 0.5).astype('int32'))
             bottom = min(image.size[1], np.floor(bottom + 0.5).astype('int32'))
-            right = min(image.size[0], np.floor(right + 0.5).astype('int32'))
+            right  = min(image.size[0], np.floor(right + 0.5).astype('int32'))
 
             # draw boxes
             label = '{} {:.2f}'.format(predicted_class, score)
             global draw
-            draw = ImageDraw.Draw(image)
+            draw  = ImageDraw.Draw(image)
             label_size = draw.textsize(label, font)
             label = label.encode('utf-8')
             print(label, top, left, bottom, right)
@@ -290,15 +281,15 @@ class YOLO(object):
     # due to frame limites of camera and preprocessing and draw process
     # -----------------------------------------------------------
     def get_FPS(self, image, test_interval):
-        if self.letterbox_image:
-            boxed_image = letterbox_image(image, (self.model_image_size[1],self.model_image_size[0]))
-        else:
-            boxed_image = image.convert('RGB') # 
-            boxed_image = boxed_image.resize((self.model_image_size[1],self.model_image_size[0]), Image.BICUBIC)
-        image_data = np.array(boxed_image, dtype='float32')
-        image_data /= 255.
-        image_data = np.expand_dims(image_data, 0)
-
+        # cv2 convert to RGB to prevent grayscale error at prediction
+        image = cvtColor(image)
+        # resize, add gray bar to sides of image
+        image_data  = resize_image(image, (self.input_shape[1], self.input_shape[0]), self.letterbox_image)
+        # add batch_size dimension and normalize
+        image_data      = np.expand_dims(preprocess_input(np.array(image_data, dtype='float32')), 0)
+        # -----------------------------------------------------------
+        # load image to grid and predict
+        # -----------------------------------------------------------
         out_boxes, out_scores, out_classes = self.sess.run(
             [self.boxes, self.scores, self.classes],
             feed_dict={
@@ -317,6 +308,36 @@ class YOLO(object):
         t2 = time.time()
         tact_time = (t2 - t1) / test_interval
         return tact_time
+    
+    # -----------------------------------------------------------
+    # get mAP
+    # -----------------------------------------------------------
+    def get_map_txt(self, image_id, image, class_names, MAP_OUT_PATH):
+        f = open(os.path.join(MAP_OUT_PATH, "detection-results/" + image_id + ".txt"),"w") 
+        # cv2 convert to RGB to prevent grayscale error at prediction
+        image       = cvtColor(image)
+        # resize, add gray bar to sides of image
+        image_data  = resize_image(image, (self.input_shape[1],self.input_shape[0]), self.letterbox_image)
+        # -----------------------------------------------------------
+        # add batch_size dimension and normalize
+        # -----------------------------------------------------------
+        image_data  = np.expand_dims(preprocess_input(np.array(image_data, dtype='float32')), 0)
+        out_boxes, out_scores, out_classes = self.sess.run(
+            [self.boxes, self.scores, self.classes],
+            feed_dict={
+                self.yolo_model.input: image_data,
+                self.input_image_shape: [image.size[1], image.size[0]],
+                K.learning_phase(): 0
+            })
+        for i, c in enumerate(out_classes):
+            predicted_class             = self.class_names[int(c)]
+            score                       = str(out_scores[i])
+            top, left, bottom, right    = out_boxes[i]
+            if predicted_class not in class_names:
+                continue
+            f.write("%s %s %s %s %s %s\n" % (predicted_class, score[:6], str(int(left)), str(int(top)), str(int(right)),str(int(bottom))))
+        f.close()
+        return 
 
     def close_session(self):
         self.sess.close()
