@@ -32,8 +32,10 @@ if __name__ == "__main__":
 
     if not os.path.exists(MAP_OUT_PATH):
         os.makedirs(MAP_OUT_PATH)
+    # folder to save ground truth results
     if not os.path.exists(os.path.join(MAP_OUT_PATH, 'ground-truth')):
         os.makedirs(os.path.join(MAP_OUT_PATH, 'ground-truth'))
+    # folder to save detection results
     if not os.path.exists(os.path.join(MAP_OUT_PATH, 'detection-results')):
         os.makedirs(os.path.join(MAP_OUT_PATH, 'detection-results'))
     if not os.path.exists(os.path.join(MAP_OUT_PATH, 'images-optional')):
@@ -80,7 +82,7 @@ if __name__ == "__main__":
     # -----------------------------------------------------------
     print("Get ground truth result.")
     for image_id in tqdm(image_ids):
-        with open(os.path.join(MAP_OUT_PATH, "ground-truth/"+image_id+".txt"), "w") as new_f:
+        with open(os.path.join(MAP_OUT_PATH, "ground-truth/"+ image_id +".txt"), "w") as new_f:
             root = ET.parse(os.path.join(VOCDEVKIT_PATH, "VOC2007/Annotations/" + image_id + ".xml")).getroot()
             for obj in root.findall('object'):
                 difficult_flag = False
