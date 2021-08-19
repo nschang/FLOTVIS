@@ -188,7 +188,7 @@ def draw_plot_func(dictionary, n_classes, window_title, plot_title, x_label, out
     sorted_dic_by_value = sorted(dictionary.items(), key=operator.itemgetter(1))
     # unpacking the list of tuples into two lists
     sorted_keys, sorted_values = zip(*sorted_dic_by_value)
-    # 
+
     if true_p_bar != "":
         # -----------------------------------------------------------
         #  Special case to draw in:
@@ -275,6 +275,7 @@ def draw_plot_func(dictionary, n_classes, window_title, plot_title, x_label, out
     plt.close()
 
 def get_map(MINOVERLAP, draw_plot, path = './map_out'):
+    # create directory to save results
     GT_PATH             = os.path.join(path, 'ground-truth')
     DR_PATH             = os.path.join(path, 'detection-results')
     IMG_PATH            = os.path.join(path, 'images-optional')
@@ -289,10 +290,11 @@ def get_map(MINOVERLAP, draw_plot, path = './map_out'):
     else:
         show_animation = False
 
-    if not os.path.exists(TEMP_FILES_PATH):
+    if not os.path.exists(TEMP_FILES_PATH): # if it doesn't exist already
         os.makedirs(TEMP_FILES_PATH)
         
-    if os.path.exists(RESULTS_FILES_PATH):
+    if os.path.exists(RESULTS_FILES_PATH): # if it exist already
+        # reset the results directory
         shutil.rmtree(RESULTS_FILES_PATH)
     if draw_plot:
         os.makedirs(os.path.join(RESULTS_FILES_PATH, "AP"))
@@ -302,10 +304,17 @@ def get_map(MINOVERLAP, draw_plot, path = './map_out'):
     if show_animation:
         os.makedirs(os.path.join(RESULTS_FILES_PATH, "images", "detections_one_by_one"))
 
+    # -----------------------------------------------------------
+    #  ground-truth
+    #      Load each of the ground-truth files into a temporary ".json" file.
+    #      Create a list of all the class names present in the ground-truth (gt_classes).
+    # -----------------------------------------------------------
+    # get a list with the ground-truth files
     ground_truth_files_list = glob.glob(GT_PATH + '/*.txt')
     if len(ground_truth_files_list) == 0:
         error("Error: No ground-truth files found!")
     ground_truth_files_list.sort()
+    # dictionary with counter per class
     gt_counter_per_class     = {}
     counter_images_per_class = {}
 
@@ -376,12 +385,16 @@ def get_map(MINOVERLAP, draw_plot, path = './map_out'):
                         # if no class exists yet
                         counter_images_per_class[class_name] = 1
                     already_seen_classes.append(class_name)
+        # dump bounding_boxes into a ".json" file
         with open(TEMP_FILES_PATH + "/" + file_id + "_ground_truth.json", 'w') as outfile:
             json.dump(bounding_boxes, outfile)
     
     gt_classes  = list(gt_counter_per_class.keys())
+    # sort classes alphabetically
     gt_classes  = sorted(gt_classes)
     n_classes   = len(gt_classes)
+    #print(gt_classes)
+    #print(gt_counter_per_class)
     # -----------------------------------------------------------
     #  detection-results
     #  Load each of the detection-results files into a temporary ".json" file
@@ -588,8 +601,8 @@ def get_map(MINOVERLAP, draw_plot, path = './map_out'):
                     # cv2.imshow("Animation", img)
                     cv2.waitKey(20) # show for 20 ms
                     # save image to results
-                    output_img_path = RESULTS_FILES_PATH + "/images/detections_one_by_one/" + class_name + "_detection" + str(idx) + ".jpg"
-                    cv2.imwrite(output_img_path, img)
+                    output_IMG_PATH = RESULTS_FILES_PATH + "/images/detections_one_by_one/" + class_name + "_detection" + str(idx) + ".jpg"
+                    cv2.imwrite(output_IMG_PATH, img)
                     # save the image with all the objects drawn to it
                     cv2.imwrite(img_cumulative_path, img_cumulative)
 
