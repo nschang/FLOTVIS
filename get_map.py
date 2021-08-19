@@ -41,16 +41,6 @@ if __name__ == "__main__":
     if not os.path.exists(os.path.join(MAP_OUT_PATH, 'images-optional')):
         os.makedirs(os.path.join(MAP_OUT_PATH, 'images-optional'))
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-na', '--no-animation', help="no animation is shown.", action="store_true")
-    parser.add_argument('-np', '--no-plot', help="no plot is shown.", action="store_true")
-    parser.add_argument('-q', '--quiet', help="minimalistic console output.", action="store_true")
-    # argparse receiving list of classes to be ignored
-    parser.add_argument('-i', '--ignore', nargs='+', type=str, help="ignore a list of classes.")
-    # argparse receiving list of classes with specific IoU (e.g., python main.py --set-class-iou person 0.7)
-    parser.add_argument('--set-class-iou', nargs='+', type=str, help="set IoU for a specific class.")
-    args = parser.parse_args()
-
     #    0,0 ------> x (width)
     #    |
     #    |  (Left,Top)
@@ -109,13 +99,13 @@ if __name__ == "__main__":
     # -----------------------------------------------------------
     # get mAP
     # -----------------------------------------------------------
-    print("Get map.")
+    print("Get mAP.")
     get_map(MINOVERLAP, True, path = MAP_OUT_PATH)
     print("Got mAP.")
 
     # -----------------------------------------------------------
     # get mAP using pycocotools
     # -----------------------------------------------------------
-    print("Get COCO map.")
+    print("Get COCO mAP.")
     get_coco_map(class_names = class_names, path = MAP_OUT_PATH)
     print("Got COCO mAP.")
