@@ -27,10 +27,10 @@ class YoloDatasets(keras.utils.Sequence):
         box_data    = []
         for i in range(index * self.batch_size, (index + 1) * self.batch_size):  
             i           = i % self.length
-            # -----------------------------------------------------------
+            # ------------------------------
             # random image augmentation for training set only
             # no augmentation for validation set
-            # -----------------------------------------------------------
+            # ------------------------------
             if self.mosaic:
                 if self.rand() < 0.5:
                     lines = sample(self.annotation_lines, 3)
@@ -269,9 +269,9 @@ class YoloDatasets(keras.utils.Sequence):
             nw = nws[index] 
             nh = nhs[index] 
 
-            # -----------------------------------------------------------
+            # ------------------------------
             # replaced
-            # -----------------------------------------------------------
+            # ------------------------------
             # # zoom input image
             # new_ar = w/h
             # scale = rand(scale_low, scale_high)
@@ -282,7 +282,7 @@ class YoloDatasets(keras.utils.Sequence):
             #     nw = int(scale * w)
             #     nh = int(nw / new_ar)
             # image = image.resize((nw,nh), Image.BICUBIC)
-            # -----------------------------------------------------------
+            # ------------------------------
 
             # place image according to four split images
             dx = place_x[index]
@@ -311,14 +311,14 @@ class YoloDatasets(keras.utils.Sequence):
             box_datas.append(box_data)
 
         # cut image and place together
-        # -----------------------------------------------------------
+        # ------------------------------
         # replaced
-        # -----------------------------------------------------------
+        # ------------------------------
         # cutx = np.random.randint(int(w*min_offset_x), 
         #                          int(w*(1 - min_offset_x)))
         # cuty = np.random.randint(int(h*min_offset_y), 
         #                          int(h*(1 - min_offset_y)))
-        # -----------------------------------------------------------
+        # ------------------------------
         cutx = int(w * min_offset_x)
         cuty = int(h * min_offset_y)
 
@@ -343,11 +343,11 @@ class YoloDatasets(keras.utils.Sequence):
         x[x<0] = 0
         new_image = cv2.cvtColor(x, cv2.COLOR_HSV2RGB)*255 # numpy array, 0 to 1
 
-        # -----------------------------------------------------------
+        # ------------------------------
         # replaced
-        # -----------------------------------------------------------
+        # ------------------------------
         # new_image = Image.fromarray((image*255).astype(np.uint8))
-        # -----------------------------------------------------------
+        # ------------------------------
         
         # process box
         new_boxes = self.merge_bboxes(box_datas, cutx, cuty)
@@ -359,51 +359,51 @@ class YoloDatasets(keras.utils.Sequence):
             box_data[:len(new_boxes)] = new_boxes
         return new_image, box_data
 
-    # -----------------------------------------------------------
+    # ------------------------------
     # read .xml files and return y_true
-    # -----------------------------------------------------------
+    # ------------------------------
     def preprocess_true_boxes(self, true_boxes, input_shape, anchors, num_classes):
         assert (true_boxes[..., 4]<num_classes).all(), 'class id must be less than num_classes'
-        # -----------------------------------------------------------
+        # ------------------------------
         # coordinate of box and size of image
-        # -----------------------------------------------------------
+        # ------------------------------
         true_boxes  = np.array(true_boxes, dtype='float32')
         input_shape = np.array(input_shape, dtype='int32')
-        # -----------------------------------------------------------
+        # ------------------------------
         # three layers of feature map:
         # anchor of feature layer 13x13 is [142, 110], [192, 243], [459, 401]
         # anchor of feature layer 26x26 is [36, 75], [76, 55], [72, 146]
         # anchor of feature layer 52x52 is [12, 16], [19, 36], [40, 28]
-        # -----------------------------------------------------------
+        # ------------------------------
         num_layers  = len(self.anchors_mask)
         # anchor_mask = [[6,7,8], [3,4,5], [0,1,2]]
-        # -----------------------------------------------------------
+        # ------------------------------
         # m is the number of images
-        # -----------------------------------------------------------
+        # ------------------------------
         m = true_boxes.shape[0]
-        # -----------------------------------------------------------
+        # ------------------------------
         # grid_shapes is the shape of grid
-        # -----------------------------------------------------------
+        # ------------------------------
         grid_shapes = [input_shape // {0:32, 1:16, 2:8}[l] for l in range(num_layers)]
-        # -----------------------------------------------------------
+        # ------------------------------
         # y_true has shape (m,13,13,3,85)(m,26,26,3,85)(m,52,52,3,85)
-        # -----------------------------------------------------------
+        # ------------------------------
         y_true = [np.zeros((m, grid_shapes[l][0], grid_shapes[l][1], len(self.anchors_mask[l]),
                            5 + num_classes), dtype='float32') for l in range(num_layers)]
-        # -----------------------------------------------------------
+        # ------------------------------
         # compute center and width, height  of ground truth bounding box
         # center (m, n, 2) width,height (m, n, 2)
-        # -----------------------------------------------------------
+        # ------------------------------
         boxes_xy = (true_boxes[..., 0:2] + true_boxes[..., 2:4]) // 2
         boxes_wh =  true_boxes[..., 2:4] - true_boxes[..., 0:2]
-        # -----------------------------------------------------------
+        # ------------------------------
         # normalize ground truth to decimal
-        # -----------------------------------------------------------
+        # ------------------------------
         true_boxes[..., 0:2] = boxes_xy / input_shape[::-1]
         true_boxes[..., 2:4] = boxes_wh / input_shape[::-1]
-        # -----------------------------------------------------------
+        # ------------------------------
         # [9,2] -> [1,9,2]
-        # -----------------------------------------------------------
+        # ------------------------------
         anchors      = np.expand_dims(anchors, 0)
         anchor_max = anchors / 2.
         anchor_min  = - anchor_max
@@ -414,20 +414,20 @@ class YoloDatasets(keras.utils.Sequence):
             # process each frame of image
             wh = boxes_wh[b, valid_mask[b]]
             if len(wh) == 0: continue
-            # -----------------------------------------------------------
+            # ------------------------------
             # [n,2] -> [n,1,2]
-            # -----------------------------------------------------------
+            # ------------------------------
             wh        = np.expand_dims(wh, -2)
             box_maxes = wh / 2.
             box_mins  = - box_maxes
 
-            # -----------------------------------------------------------
+            # ------------------------------
             # Intersection over Union (IoU) of ground truth bounding box and anchor box
             # intersect_area  [n,9]
             # box_area        [n,1]
             # anchor_area     [1,9]
             # iou             [n,9]
-            # -----------------------------------------------------------
+            # ------------------------------
             intersect_mins  = np.maximum(box_mins, anchor_min)
             intersect_maxes = np.minimum(box_maxes, anchor_max)
             intersect_wh    = np.maximum(intersect_maxes - intersect_mins, 0.)
@@ -437,15 +437,15 @@ class YoloDatasets(keras.utils.Sequence):
             anchor_area = anchors[..., 0] * anchors[..., 1]
 
             iou = intersect_area / (box_area + anchor_area - intersect_area)
-            # -----------------------------------------------------------
+            # ------------------------------
             # [n,] dimension
-            # -----------------------------------------------------------
+            # ------------------------------
             best_anchor = np.argmax(iou, axis=-1)
 
             for t, n in enumerate(best_anchor):
-                # -----------------------------------------------------------
+                # ------------------------------
                 # find layer of feature map of ground truth
-                # -----------------------------------------------------------
+                # ------------------------------
                 for l in range(num_layers):
                     if n in self.anchor_mask[l]:
                         # ------------------------------

@@ -11,10 +11,10 @@ from utils.utils import compose
 from nets.CSPdarknet53 import darknet_body, DarknetConv2D
 from nets.loss import yolo_loss
 
-# --------------------------------------------------------------
-# convolution blocks -> convolution + standardization + activation function
-# DarknetConv2D + BatchNormalization + LeakyReLU
-# --------------------------------------------------------------
+# ------------------------------
+# convolution block ->
+# DarknetConv2D + Batch Normalization + LeakyReLU activation function
+# ------------------------------
 def DarknetConv2D_BN_Leaky(*args, **kwargs):
     no_bias_kwargs = {'use_bias': False}
     no_bias_kwargs.update(kwargs)
@@ -23,9 +23,9 @@ def DarknetConv2D_BN_Leaky(*args, **kwargs):
         BatchNormalization(),
         LeakyReLU(alpha=0.1))
 
-# --------------------------------------------------------------
+# ------------------------------
 # five convolutions
-# --------------------------------------------------------------
+# ------------------------------
 def make_five_convs(x, num_filters):
     # five times convolution
     x = DarknetConv2D_BN_Leaky(num_filters, (1,1))(x)
@@ -35,26 +35,26 @@ def make_five_convs(x, num_filters):
     x = DarknetConv2D_BN_Leaky(num_filters, (1,1))(x)
     return x
 
-# --------------------------------------------------------------
+# ------------------------------
 # build Panet network and get prediction result
-# --------------------------------------------------------------
+# ------------------------------
 def yolo_body(input_shape, anchors_mask, num_classes):
     inputs = Input(input_shape)
-    # --------------------------------------------------------------   
+    # ------------------------------   
     # generate the CSPdarknet53 backbone
     # three layers of feature map are generated in the backbone
     # sizes of them are (52,52,256), (26,26,512), (13,13,1024)
-    # --------------------------------------------------------------
+    # ------------------------------
     feat1,feat2,feat3 = darknet_body(inputs)
 
     # 13,13,1024 -> 13,13,512 -> 13,13,1024 -> 13,13,512 -> 13,13,2048 -> 13,13,512 -> 13,13,1024 -> 13,13,512
     P5 = DarknetConv2D_BN_Leaky(512, (1,1))(feat3)
     P5 = DarknetConv2D_BN_Leaky(1024, (3,3))(P5)
     P5 = DarknetConv2D_BN_Leaky(512, (1,1))(P5)
-    # --------------------------------------------------------------
+    # ------------------------------
     # using Spatial Pyramid Pooling (SPP) structure
     # stack layers after max-pooling
-    # --------------------------------------------------------------
+    # ------------------------------
     maxpool1 = MaxPooling2D(pool_size=(13,13), strides=(1,1), padding='same')(P5)
     maxpool2 = MaxPooling2D(pool_size=(9,9), strides=(1,1), padding='same')(P5)
     maxpool3 = MaxPooling2D(pool_size=(5,5), strides=(1,1), padding='same')(P5)
@@ -83,10 +83,10 @@ def yolo_body(input_shape, anchors_mask, num_classes):
     # 52,52,256 -> 52,52,128 -> 52,52,256 -> 52,52,128 -> 52,52,256 -> 52,52,128
     P3 = make_five_convs(P3,128)
     
-    # --------------------------------------------------------------
+    # ------------------------------
     # third feature layer
     # y3=(batch_size,52,52,3,85)
-    # --------------------------------------------------------------
+    # ------------------------------
     P3_output = DarknetConv2D_BN_Leaky(256, (3,3))(P3)
     P3_output = DarknetConv2D(len(anchors_mask[0])*(num_classes+5), (1,1))(P3_output)
 
@@ -98,10 +98,10 @@ def yolo_body(input_shape, anchors_mask, num_classes):
     # 26,26,512 -> 26,26,256 -> 26,26,512 -> 26,26,256 -> 26,26,512 -> 26,26,256
     P4 = make_five_convs(P4,256)
     
-    # --------------------------------------------------------------
+    # ------------------------------
     # second feature layer
     # y2=(batch_size,26,26,3,85)
-    # --------------------------------------------------------------
+    # ------------------------------
     P4_output = DarknetConv2D_BN_Leaky(512, (3,3))(P4)
     P4_output = DarknetConv2D(len(anchors_mask[1])*(num_classes+5), (1,1))(P4_output)
     
@@ -113,10 +113,10 @@ def yolo_body(input_shape, anchors_mask, num_classes):
     # 13,13,1024 -> 13,13,512 -> 13,13,1024 -> 13,13,512 -> 13,13,1024 -> 13,13,512
     P5 = make_five_convs(P5,512)
     
-    # --------------------------------------------------------------
+    # ------------------------------
     # first feature layer
     # y1=(batch_size,13,13,3,85)
-    # --------------------------------------------------------------
+    # ------------------------------
     P5_output = DarknetConv2D_BN_Leaky(1024, (3,3))(P5)
     P5_output = DarknetConv2D(len(anchors_mask[2])*(num_classes+5), (1,1))(P5_output)
 

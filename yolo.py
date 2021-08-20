@@ -1,4 +1,4 @@
-# coding=utf-8
+# -*- coding: utf-8 -*-
 
 import colorsys
 import os
@@ -15,10 +15,10 @@ from utils.utils import (cvtColor, get_anchors, get_classes,
 
 class YOLO(object):
     _defaults = {
-        # -----------------------------------------------------------
+        # ------------------------------
         # Both model_path and classes_path need to be updated!
         # check model_path and classes_path if shape mismatch error 
-        # -----------------------------------------------------------
+        # ------------------------------
         #"model_path"        : 'train/trained_weights_stage_1.h5',
         "model_path"        : 'model_data/trained_weights_stage_1.h5',
         "classes_path"      : 'model_data/class.txt',
@@ -34,10 +34,10 @@ class YOLO(object):
         "max_boxes"         : 100,
         # choose between (416,416) or (608,608) depending on RAM size
         "input_shape"  : (608, 608), # must be multiple of 32
-        # -----------------------------------------------------------
+        # ------------------------------
         # toggle letterbox_image to resize input without distortion
         # effect UNTESTED
-        # -----------------------------------------------------------
+        # ------------------------------
         "letterbox_image"   : True,
     }
 
@@ -48,9 +48,9 @@ class YOLO(object):
         else:
             return "Unrecognized attribute name '" + n + "'"
 
-    # -----------------------------------------------------------
+    # ------------------------------
     # initialize yolo
-    # -----------------------------------------------------------
+    # ------------------------------
     def __init__(self, **kwargs):
         self.__dict__.update(self._defaults)
         for name, value in kwargs.items():
@@ -73,9 +73,9 @@ class YOLO(object):
 
         self.sess                             = K.get_session()
         self.boxes, self.scores, self.classes = self.generate()
-    # -----------------------------------------------------------
+    # ------------------------------
     # load class and pre-trained model
-    # -----------------------------------------------------------
+    # ------------------------------
     def generate(self):
         model_path  = os.path.expanduser(self.model_path)
         assert model_path.endswith('.h5'), 'Keras model or weights must be a .h5 file.'
@@ -95,11 +95,11 @@ class YOLO(object):
         np.random.shuffle(self.colors)
         np.random.seed(None)
 
-        # -----------------------------------------------------------
+        # ------------------------------
         # yolo_process handles post-processing of detection result
         # which includes Decoding, Non-Maximum Suppression (NMS),
         # Thresholding, etc.
-        # -----------------------------------------------------------
+        # ------------------------------
         boxes, scores, classes  = yolo_process(
             self.yolo_model.output, 
             self.anchors,
@@ -113,24 +113,24 @@ class YOLO(object):
         )
         return boxes, scores, classes
 
-# -----------------------------------------------------------
+# ------------------------------
 # detect image
-# -----------------------------------------------------------
+# ------------------------------
     def detect_image(self, image):
-        # -----------------------------------------------------------
+        # ------------------------------
         # # BATCH DETECT MODULE 
         # write list of target images to a new txt file
         # f = open("./test/"+ image_id +".txt","w")
-        # -----------------------------------------------------------
+        # ------------------------------
         # cv2 convert to RGB to prevent grayscale error at prediction
         image = cvtColor(image)
         # resize, add gray bar to sides of image
         image_data  = resize_image(image, (self.input_shape[1], self.input_shape[0]), self.letterbox_image)
         # add batch_size dimension and normalize
         image_data      = np.expand_dims(preprocess_input(np.array(image_data, dtype='float32')), 0)
-        # -----------------------------------------------------------
+        # ------------------------------
         # load image to grid and predict
-        # -----------------------------------------------------------
+        # ------------------------------
         out_boxes, out_scores, out_classes = self.sess.run(
             [self.boxes, self.scores, self.classes],
             feed_dict = {
@@ -156,10 +156,10 @@ class YOLO(object):
 
             # coordinate of prediction box
             top, left, bottom, right = box
-            # -----------------------------------------------------------
+            # ------------------------------
             # BATCH DETECT MODULE
             # f.write("%s %s %s %s %s %s\n" % (predicted_class, str(score)[:6], str(int(left)), str(int(top)), str(int(right)),str(int(bottom))))
-            # -----------------------------------------------------------
+            # ------------------------------
             top    = top - 5
             left   = left - 5
             bottom = bottom + 5
@@ -192,9 +192,9 @@ class YOLO(object):
                 fill=self.colors[c])
             # draw prediction on each object label
             draw.text(text_origin, str(label,'UTF-8'), fill=(0, 0, 0), font=font)
-        # -----------------------------------------------------------
+        # ------------------------------
         # draw sum of detected objects above original image
-        # -----------------------------------------------------------
+        # ------------------------------
         # plastic count:
         # (0,0)------(w,0)
         # |              |
@@ -202,20 +202,20 @@ class YOLO(object):
         # |              |
         # |              |
         # (0,h)------(w,h)
-        # -----------------------------------------------------------
+        # ------------------------------
         image_w, image_h = image.size # width and height of original image
         image = image.crop((0, - 5e-2 * image_h, image_w, image_h))
         draw2 = ImageDraw.Draw(image) 
         # draw2.text((5, 0), "plastic count: " + str(out_boxes.shape[0]), (255, 255, 255), font=font)
-        # -----------------------------------------------------------
+        # ------------------------------
         # draw FPS
-        # -----------------------------------------------------------
+        # ------------------------------
         # includes inference, score filtering, non-maximal suppression
-        # does NOT include pre-processing (normalization and resizing) and draw
+        # does NOT include pre-processing (batch normalization and resizing) and draw
         # default test using test/test.jpg
         # note that the FPS when using camera will be lower than this value
         # due to frame limites of camera and preprocessing and draw process
-        # -----------------------------------------------------------
+        # ------------------------------
         test_interval = 1
         t3 = time.time()
         for _ in range(test_interval):
@@ -234,23 +234,23 @@ class YOLO(object):
         + "    FPS: " + frame_per_second
         + "    Predicted in " + inference_time + " seconds"
         , (255, 255, 255), font=font)
-        # -----------------------------------------------------------
+        # ------------------------------
         # IoU threshold = 50 %, used Area-Under-Curve for each unique Recall
         # mean average precision (MAP@0.50) = 0.756655, or 75.67 %
         # Total Detection Time: Seconds
-        # -----------------------------------------------------------
+        # ------------------------------
         # beautify output
-        # -----------------------------------------------------------
+        # ------------------------------
         # from random import randint
         # make_color = lambda : (randint(50, 255), randint(50, 255), randint(50,255))
         # z = 300
         # for c in "plastic count: ":
         #     draw2.text((z, 5), c, make_color())
         #     z = z + 12
-        # -----------------------------------------------------------
+        # ------------------------------
         # draw translucent box to top left corner of image and 
         # draw total object count on to the box
-        # -----------------------------------------------------------
+        # ------------------------------
         # draw1 = ImageDraw.Draw(image, "RGBA")
         # draw1.rectangle(((0, 0), (158, 36)), fill=(200, 200, 200, 66))
         # draw.text((5, 5), "plastic count: " + str(out_boxes.shape[0]), (0, 0, 0), font=font)
@@ -258,21 +258,21 @@ class YOLO(object):
         #del draw2
         #del draw
         return image
-        # -----------------------------------------------------------
+        # ------------------------------
         # BATCH DETECT MODULE
         # f.close()
         # return
-        # -----------------------------------------------------------
+        # ------------------------------
 
-    # -----------------------------------------------------------
+    # ------------------------------
     # get FPS
-    # -----------------------------------------------------------
+    # ------------------------------
     # includes inference, score filtering, non-maximal suppression
-    # does NOT include pre-processing (normalization and resizing) and draw
+    # does NOT include pre-processing (batch normalization and resizing) and draw
     # default test using test/test.jpg
     # note that the FPS when using camera will be lower than this value
     # due to frame limites of camera and preprocessing and draw process
-    # -----------------------------------------------------------
+    # ------------------------------
     def get_FPS(self, image, test_interval):
         # cv2 convert to RGB to prevent grayscale error at prediction
         image = cvtColor(image)
@@ -280,9 +280,9 @@ class YOLO(object):
         image_data  = resize_image(image, (self.input_shape[1], self.input_shape[0]), self.letterbox_image)
         # add batch_size dimension and normalize
         image_data      = np.expand_dims(preprocess_input(np.array(image_data, dtype='float32')), 0)
-        # -----------------------------------------------------------
+        # ------------------------------
         # load image to grid and predict
-        # -----------------------------------------------------------
+        # ------------------------------
         out_boxes, out_scores, out_classes = self.sess.run(
             [self.boxes, self.scores, self.classes],
             feed_dict={
@@ -302,18 +302,18 @@ class YOLO(object):
         tact_time = (t2 - t1) / test_interval
         return tact_time
     
-    # -----------------------------------------------------------
+    # ------------------------------
     # get mAP
-    # -----------------------------------------------------------
+    # ------------------------------
     def get_map_txt(self, image_id, image, class_names, MAP_OUT_PATH):
         f = open(os.path.join(MAP_OUT_PATH, "detection-results/" + image_id + ".txt"),"w") 
         # cv2 convert to RGB to prevent grayscale error at prediction
         image       = cvtColor(image)
         # resize, add gray bar to sides of image
         image_data  = resize_image(image, (self.input_shape[1],self.input_shape[0]), self.letterbox_image)
-        # -----------------------------------------------------------
+        # ------------------------------
         # add batch_size dimension and normalize
-        # -----------------------------------------------------------
+        # ------------------------------
         image_data  = np.expand_dims(preprocess_input(np.array(image_data, dtype='float32')), 0)
         out_boxes, out_scores, out_classes = self.sess.run(
             [self.boxes, self.scores, self.classes],

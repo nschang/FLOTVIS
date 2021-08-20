@@ -1,4 +1,6 @@
+# ------------------------------
 # k-means clustering
+# ------------------------------
 import glob
 import xml.etree.ElementTree as ET
 

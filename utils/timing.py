@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-# -------------------------------
+# ------------------------------
 # Measure execution time of Python script
 # print the start and end times, and overall elapsed time
 # source: https://stackoverflow.com/a/1557906/6009280
-# -------------------------------
+# ------------------------------
 import atexit
 from time import clock
 from functools import reduce

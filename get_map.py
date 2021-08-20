@@ -1,6 +1,6 @@
-# -----------------------------------------------------------
+# ------------------------------
 # modified from https://github.com/Cartucho/mAP
-# -----------------------------------------------------------
+# ------------------------------
 import os
 import argparse
 import xml.etree.ElementTree as ET
@@ -12,19 +12,19 @@ from utils.utils_map import get_coco_map, get_map
 from yolo import YOLO
 
 if __name__ == "__main__":
-    # -----------------------------------------------------------
+    # ------------------------------
     # set MINOVERLAP = 0.75 for mAP0.75
-    # -----------------------------------------------------------
+    # ------------------------------
     MINOVERLAP = 0.5 
-    # -----------------------------------------------------------
+    # ------------------------------
     # set variables
-    # -----------------------------------------------------------
+    # ------------------------------
     MAP_VISUALIZE   = True         # toggle visualization of VOC_map
     VOCDEVKIT_PATH  = 'VOCdevkit'   # folder with annotated images
     MAP_OUT_PATH    = 'mAP_out'     # folder to save mAP output
-    # -----------------------------------------------------------
+    # ------------------------------
     # define object classes
-    # -----------------------------------------------------------
+    # ------------------------------
     classes_path = 'model_data/class.txt'
     class_names, _ = get_classes(classes_path)
 
@@ -51,11 +51,11 @@ if __name__ == "__main__":
     # (height)            *
     #                 (Right,Bottom)
     
-    # -----------------------------------------------------------
+    # ------------------------------
     # get prediction
-    # -----------------------------------------------------------
+    # ------------------------------
     print("Load model.")
-    yolo = YOLO(confidence = 0.001, nms_iou = 0.5)
+    yolo = YOLO(score = 0.001, iou = 0.5)
     print("Load model done.")
 
     print("Get predict result.")
@@ -67,9 +67,9 @@ if __name__ == "__main__":
         yolo.get_map_txt(image_id, image, class_names, MAP_OUT_PATH)
     print("Got prediction.")
 
-    # -----------------------------------------------------------
+    # ------------------------------
     # get ground truth
-    # -----------------------------------------------------------
+    # ------------------------------
     print("Get ground truth result.")
     for image_id in tqdm(image_ids):
         with open(os.path.join(MAP_OUT_PATH, "ground-truth/"+ image_id +".txt"), "w") as new_f:
@@ -96,16 +96,16 @@ if __name__ == "__main__":
                     new_f.write("%s %s %s %s %s\n" % (obj_name, left, top, right, bottom))
     print("Got ground truth.")
 
-    # -----------------------------------------------------------
+    # ------------------------------
     # get mAP
-    # -----------------------------------------------------------
+    # ------------------------------
     print("Get mAP.")
     get_map(MINOVERLAP, True, path = MAP_OUT_PATH)
     print("Got mAP.")
 
-    # -----------------------------------------------------------
+    # ------------------------------
     # get mAP using pycocotools
-    # -----------------------------------------------------------
+    # ------------------------------
     print("Get COCO mAP.")
     get_coco_map(class_names = class_names, path = MAP_OUT_PATH)
     print("Got COCO mAP.")

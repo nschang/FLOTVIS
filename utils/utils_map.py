@@ -1,6 +1,6 @@
-# -----------------------------------------------------------
+# ------------------------------
 # modified from https://github.com/Cartucho/mAP
-# -----------------------------------------------------------
+# ------------------------------
 import os
 import glob
 import json
@@ -24,7 +24,7 @@ import numpy as np
 """
 
 def log_average_miss_rate(precision, fp_cumsum, num_images):
-    # -----------------------------------------------------------
+    # ------------------------------
         # log-average miss rate:
         #     Calculated by averaging miss rates at 9 evenly spaced FPPI points
         #     between 10e-2 and 10e0, in log-space.
@@ -38,7 +38,7 @@ def log_average_miss_rate(precision, fp_cumsum, num_images):
         #     [1] Dollar, Piotr, et al. "Pedestrian Detection: An Evaluation of the
         #        State of the Art." Pattern Analysis and Machine Intelligence, IEEE
         #        Transactions on 34.4 (2012): 743 - 761.
-    # -----------------------------------------------------------
+    # ------------------------------
 
     # if there were no detections of that class
     if precision.size == 0:
@@ -65,16 +65,16 @@ def log_average_miss_rate(precision, fp_cumsum, num_images):
 
     return lamr, mr, fppi
 
-# -----------------------------------------------------------
+# ------------------------------
 #  throw error and exit
-# -----------------------------------------------------------
+# ------------------------------
 def error(msg):
     print(msg)
     sys.exit(0)
 
-# -----------------------------------------------------------
+# ------------------------------
 #  check if the number is a float between 0.0 and 1.0
-# -----------------------------------------------------------
+# ------------------------------
 def is_float_between_0_and_1(value):
     try:
         val = float(value)
@@ -85,13 +85,13 @@ def is_float_between_0_and_1(value):
     except ValueError:
         return False
 
-# -----------------------------------------------------------
+# ------------------------------
 # Calculate the AP given the recall and precision array
 # 1) compute a version of the measured precision/recall curve with precision monotonically decreasing
 # 2) compute the AP as the area under this curve by numerical integration.
-# -----------------------------------------------------------
+# ------------------------------
 def voc_ap(rec, prec):
-    # -----------------------------------------------------------
+    # ------------------------------
     # --- Official matlab code VOC2012---
     # mrec=[0 ; rec ; 1];
     # mpre=[0 ; prec ; 0];
@@ -100,46 +100,46 @@ def voc_ap(rec, prec):
     # end
     # i=find(mrec(2:end)~=mrec(1:end-1))+1;
     # ap=sum((mrec(i)-mrec(i-1)).*mpre(i));
-    # -----------------------------------------------------------
+    # ------------------------------
     rec.insert(0, 0.0) # insert 0.0 at begining of list
     rec.append(1.0) # insert 1.0 at end of list
     mrec = rec[:]
     prec.insert(0, 0.0) # insert 0.0 at begining of list
     prec.append(0.0) # insert 0.0 at end of list
     mpre = prec[:]
-    # -----------------------------------------------------------
+    # ------------------------------
     #  This part makes the precision monotonically decreasing
     #     (goes from the end to the beginning)
     #     matlab: for i=numel(mpre)-1:-1:1
     #                 mpre(i)=max(mpre(i),mpre(i+1));
-    # -----------------------------------------------------------
+    # ------------------------------
     # matlab indexes start in 1 but python in 0, so I have to do:
     #     range(start=(len(mpre) - 2), end=0, step=-1)
     # also the python function range excludes the end, resulting in:
     #     range(start=(len(mpre) - 2), end=-1, step=-1)    
     for i in range(len(mpre)-2, -1, -1):
         mpre[i] = max(mpre[i], mpre[i+1])
-    # -----------------------------------------------------------
+    # ------------------------------
     #  This part creates a list of indexes where the recall changes
     #     matlab: i=find(mrec(2:end)~=mrec(1:end-1))+1;
-    # -----------------------------------------------------------
+    # ------------------------------
     i_list = []
     for i in range(1, len(mrec)):
         if mrec[i] != mrec[i-1]:
             i_list.append(i) # if it was matlab would be i + 1
-    # -----------------------------------------------------------
+    # ------------------------------
     #  The Average Precision (AP) is the area under the curve
     #     (numerical integration)
     #     matlab: ap=sum((mrec(i)-mrec(i-1)).*mpre(i));
-    # -----------------------------------------------------------
+    # ------------------------------
     ap = 0.0
     for i in i_list:
         ap += ((mrec[i]-mrec[i-1])*mpre[i])
     return ap, mrec, mpre
 
-# -----------------------------------------------------------
+# ------------------------------
 #  Convert the lines of a file to a list
-# -----------------------------------------------------------
+# ------------------------------
 def file_lines_to_list(path):
     # open txt file lines to a list
     with open(path) as f:
@@ -148,9 +148,9 @@ def file_lines_to_list(path):
     content = [x.strip() for x in content]
     return content
 
-# -----------------------------------------------------------
+# ------------------------------
 #  Draws text in image
-# -----------------------------------------------------------
+# ------------------------------
 def draw_text_in_image(img, text, pos, color, line_width):
     font = cv2.FONT_HERSHEY_PLAIN
     fontScale = 1
@@ -165,9 +165,9 @@ def draw_text_in_image(img, text, pos, color, line_width):
     text_width, _ = cv2.getTextSize(text, font, fontScale, lineType)[0]
     return img, (line_width + text_width)
 
-# -----------------------------------------------------------
+# ------------------------------
 #  Plot - adjust axes
-# -----------------------------------------------------------
+# ------------------------------
 def adjust_axes(r, t, fig, axes):
     # get text width for re-scaling
     bb = t.get_window_extent(renderer=r)
@@ -180,9 +180,9 @@ def adjust_axes(r, t, fig, axes):
     x_lim = axes.get_xlim()
     axes.set_xlim([x_lim[0], x_lim[1]*propotion])
 
-# -----------------------------------------------------------
+# ------------------------------
 #  Draw plot using Matplotlib
-# -----------------------------------------------------------
+# ------------------------------
 def draw_plot_func(dictionary, n_classes, window_title, plot_title, x_label, output_path, to_show, plot_color, true_p_bar):
     # sort the dictionary by decreasing value, into a list of tuples
     sorted_dic_by_value = sorted(dictionary.items(), key=operator.itemgetter(1))
@@ -190,12 +190,12 @@ def draw_plot_func(dictionary, n_classes, window_title, plot_title, x_label, out
     sorted_keys, sorted_values = zip(*sorted_dic_by_value)
 
     if true_p_bar != "":
-        # -----------------------------------------------------------
+        # ------------------------------
         #  Special case to draw in:
         #     - green -> TP: True Positives (object detected and matches ground-truth)
         #     - red -> FP: False Positives (object detected but does not match ground-truth)
         #     - orange -> FN: False Negatives (object not detected but present in the ground-truth)
-        # -----------------------------------------------------------
+        # ------------------------------
         fp_sorted = []
         tp_sorted = []
         for key in sorted_keys:
@@ -205,9 +205,9 @@ def draw_plot_func(dictionary, n_classes, window_title, plot_title, x_label, out
         plt.barh(range(n_classes), tp_sorted, align='center', color='forestgreen', label='True Positive', left=fp_sorted)
         # add legend
         plt.legend(loc='lower right')
-        # -----------------------------------------------------------
+        # ------------------------------
         #  Write number on side of bar
-        # -----------------------------------------------------------
+        # ------------------------------
         fig = plt.gcf() # gcf - get current figure
         axes = plt.gca()
         r = fig.canvas.get_renderer()
@@ -224,9 +224,9 @@ def draw_plot_func(dictionary, n_classes, window_title, plot_title, x_label, out
                 adjust_axes(r, t, fig, axes)
     else:
         plt.barh(range(n_classes), sorted_values, color=plot_color)
-        # -----------------------------------------------------------
+        # ------------------------------
         #  Write number on side of bar
-        # -----------------------------------------------------------
+        # ------------------------------
         fig = plt.gcf() # gcf - get current figure
         axes = plt.gca()
         r = fig.canvas.get_renderer()
@@ -243,9 +243,9 @@ def draw_plot_func(dictionary, n_classes, window_title, plot_title, x_label, out
     # write classes in y axis
     tick_font_size = 12
     plt.yticks(range(n_classes), sorted_keys, fontsize=tick_font_size)
-    # -----------------------------------------------------------
+    # ------------------------------
     #  Re-scale height accordingly
-    # -----------------------------------------------------------
+    # ------------------------------
     init_height = fig.get_figheight()
     # comput the matrix height in points and inches
     dpi = fig.dpi
@@ -304,11 +304,11 @@ def get_map(MINOVERLAP, draw_plot, path = './map_out'):
     if show_animation:
         os.makedirs(os.path.join(RESULTS_FILES_PATH, "images", "detections_one_by_one"))
 
-    # -----------------------------------------------------------
+    # ------------------------------
     #  ground-truth
     #      Load each of the ground-truth files into a temporary ".json" file.
     #      Create a list of all the class names present in the ground-truth (gt_classes).
-    # -----------------------------------------------------------
+    # ------------------------------
     # get a list with the ground-truth files
     ground_truth_files_list = glob.glob(GT_PATH + '/*.txt')
     if len(ground_truth_files_list) == 0:
@@ -395,10 +395,10 @@ def get_map(MINOVERLAP, draw_plot, path = './map_out'):
     n_classes   = len(gt_classes)
     #print(gt_classes)
     #print(gt_counter_per_class)
-    # -----------------------------------------------------------
+    # ------------------------------
     #  detection-results
     #  Load each of the detection-results files into a temporary ".json" file
-    # -----------------------------------------------------------
+    # ------------------------------
     # get a list with the detection-results files
     dr_files_list = glob.glob(DR_PATH + '/*.txt')
     dr_files_list.sort()
@@ -418,14 +418,14 @@ def get_map(MINOVERLAP, draw_plot, path = './map_out'):
             lines = file_lines_to_list(txt_file)
             for line in lines:
                 try:
-                    tmp_class_name, confidence, left, top, right, bottom = line.split()
+                    tmp_class_name, score, left, top, right, bottom = line.split()
                 except:
                     line_split     = line.split()
                     bottom         = line_split[-1]
                     right          = line_split[-2]
                     top            = line_split[-3]
                     left           = line_split[-4]
-                    confidence     = line_split[-5]
+                    score     = line_split[-5]
                     tmp_class_name = ""
                     for name in line_split[:-5]:
                         tmp_class_name += name + " "
@@ -434,16 +434,16 @@ def get_map(MINOVERLAP, draw_plot, path = './map_out'):
                 if tmp_class_name == class_name:
                     #print("match")
                     bbox = left + " " + top + " " + right + " " +bottom
-                    bounding_boxes.append({"confidence":confidence, "file_id":file_id, "bbox":bbox})
+                    bounding_boxes.append({"confidence_score":score, "file_id":file_id, "bbox":bbox})
                     #print(bounding_boxes)
-        # sort detection-results by decreasing confidence
-        bounding_boxes.sort(key=lambda x:float(x['confidence']), reverse=True)
+        # sort detection-results by decreasing confidence score
+        bounding_boxes.sort(key=lambda x:float(x['confidence_score']), reverse=True)
         with open(TEMP_FILES_PATH + "/" + class_name + "_dr.json", 'w') as outfile:
             json.dump(bounding_boxes, outfile)
 
-    # -----------------------------------------------------------
+    # ------------------------------
     #  Calculate the AP for each class
-    # -----------------------------------------------------------
+    # ------------------------------
     sum_AP = 0.0
     ap_dictionary = {}
     lamr_dictionary = {}
@@ -454,14 +454,14 @@ def get_map(MINOVERLAP, draw_plot, path = './map_out'):
 
         for class_index, class_name in enumerate(gt_classes):
             count_true_positives[class_name] = 0
-            # -----------------------------------------------------------
+            # ------------------------------
             #  Load detection-results of that class
-            # -----------------------------------------------------------
+            # ------------------------------
             dr_file = TEMP_FILES_PATH + "/" + class_name + "_dr.json"
             dr_data = json.load(open(dr_file))
-            # -----------------------------------------------------------
+            # ------------------------------
             #  Assign detection-results to ground-truth objects
-            # -----------------------------------------------------------
+            # ------------------------------
             nd          = len(dr_data)
             tp          = [0] * nd    # creates an array of zeros of size nd
             fp          = [0] * nd
@@ -470,7 +470,7 @@ def get_map(MINOVERLAP, draw_plot, path = './map_out'):
 
             for idx, detection in enumerate(dr_data):
                 file_id     = detection["file_id"]
-                score[idx]  = float(detection["confidence"])
+                score[idx]  = float(detection["score"])
                 if score[idx] > 0.5:
                     score05_idx = idx
 
@@ -551,9 +551,9 @@ def get_map(MINOVERLAP, draw_plot, path = './map_out'):
                     fp[idx] = 1
                     if ovmax > 0:
                         status = "INSUFFICIENT OVERLAP"
-                # -----------------------------------------------------------
+                # ------------------------------
                 #  Draw image to show animation
-                # -----------------------------------------------------------
+                # ------------------------------
                 if show_animation:
                     height, widht = img.shape[:2]
                     # colors (OpenCV works with BGR)
@@ -579,7 +579,7 @@ def get_map(MINOVERLAP, draw_plot, path = './map_out'):
                     # 2nd line
                     v_pos += int(bottom_border / 2.0)
                     rank_pos = str(idx + 1) # rank position (idx starts at 0)
-                    text  = "Detection #rank: " + rank_pos + " confidence: {0:.2f}% ".format(float(detection["confidence"])*100)
+                    text  = "Detection #rank: " + rank_pos + " confidence_score: {0:.2f}% ".format(float(detection["confidence_score"]) * 100)
                     img, line_width = draw_text_in_image(img, text, (margin, v_pos), white, 0)
                     color = light_red
                     if status == "MATCH!":
@@ -641,9 +641,9 @@ def get_map(MINOVERLAP, draw_plot, path = './map_out'):
                 F1_text         = "0.00" + " = " + class_name + " F1 " 
                 Recall_text     = "0.00%" + " = " + class_name + " Recall " 
                 Precision_text  = "0.00%" + " = " + class_name + " Precision " 
-            # -----------------------------------------------------------
+            # ------------------------------
             #  Write to results.txt
-            # -----------------------------------------------------------
+            # ------------------------------
             rounded_prec = [ '%.2f' % elem for elem in prec ]
             rounded_rec  = [ '%.2f' % elem for elem in rec ]
             results_file.write(text + "\n Precision: " + str(rounded_prec) + "\n Recall :" + str(rounded_rec) + "\n\n")
@@ -658,9 +658,9 @@ def get_map(MINOVERLAP, draw_plot, path = './map_out'):
             lamr, mr, fppi = log_average_miss_rate(np.array(rec), np.array(fp), n_images)
             lamr_dictionary[class_name] = lamr
 
-            # -----------------------------------------------------------
+            # ------------------------------
             #  Draw plot
-            # -----------------------------------------------------------
+            # ------------------------------
             if draw_plot:
                 plt.plot(rec, prec, '-o')
                 # add a new penultimate point to the list (mrec[-2], 0.0)
@@ -732,9 +732,9 @@ def get_map(MINOVERLAP, draw_plot, path = './map_out'):
     # remove the temp_files directory
     shutil.rmtree(TEMP_FILES_PATH)
 
-    # -----------------------------------------------------------
+    # ------------------------------
     #  Count total of detection-results
-    # -----------------------------------------------------------
+    # ------------------------------
     # iterate through all the files
     det_counter_per_class = {}
     for txt_file in dr_files_list:
@@ -754,26 +754,26 @@ def get_map(MINOVERLAP, draw_plot, path = './map_out'):
     #print(det_counter_per_class)
     dr_classes = list(det_counter_per_class.keys())
 
-    # -----------------------------------------------------------
+    # ------------------------------
     # Write number of ground-truth objects per class to results.txt
-    # -----------------------------------------------------------
+    # ------------------------------
     with open(RESULTS_FILES_PATH + "/results.txt", 'a') as results_file:
         results_file.write("\n# Number of ground-truth objects per class\n")
         for class_name in sorted(gt_counter_per_class):
             results_file.write(class_name + ": " + str(gt_counter_per_class[class_name]) + "\n")
 
-    # -----------------------------------------------------------
+    # ------------------------------
     #  Finish counting true positives
-    # -----------------------------------------------------------
+    # ------------------------------
     for class_name in dr_classes:
         # if class exists in detection-result but not in ground-truth then there are no true positives in that class
         if class_name not in gt_classes:
             count_true_positives[class_name] = 0
     #print(count_true_positives)
 
-    # -----------------------------------------------------------
+    # ------------------------------
     #  Write number of detected objects per class to results.txt
-    # -----------------------------------------------------------
+    # ------------------------------
     with open(RESULTS_FILES_PATH + "/results.txt", 'a') as results_file:
         results_file.write("\n# Number of detected objects per class\n")
         for class_name in sorted(dr_classes):
@@ -783,9 +783,9 @@ def get_map(MINOVERLAP, draw_plot, path = './map_out'):
             text += ", fp:" + str(n_det - count_true_positives[class_name]) + ")\n"
             results_file.write(text)
     
-    # -----------------------------------------------------------
+    # ------------------------------
     #  Plot the total number of occurences of each class in the ground-truth
-    # -----------------------------------------------------------
+    # ------------------------------
     if draw_plot:
         window_title = "ground-truth-info"
         plot_title = "ground-truth\n"
@@ -806,9 +806,9 @@ def get_map(MINOVERLAP, draw_plot, path = './map_out'):
             '',
             )
 
-    # -----------------------------------------------------------
+    # ------------------------------
     #  Plot the total number of occurences of each class in the "detection-results" folder
-    # -----------------------------------------------------------
+    # ------------------------------
     # if draw_plot:
     #     window_title = "detection-results-info"
     #     # Plot title
@@ -833,9 +833,9 @@ def get_map(MINOVERLAP, draw_plot, path = './map_out'):
     #         plot_color,
     #         true_p_bar
     #         )
-    # -----------------------------------------------------------
+    # ------------------------------
     #  Draw log-average miss rate plot (Show lamr of all classes in decreasing order)
-    # -----------------------------------------------------------
+    # ------------------------------
     if draw_plot:
         window_title = "lamr"
         plot_title = "log-average miss rate"
@@ -855,9 +855,9 @@ def get_map(MINOVERLAP, draw_plot, path = './map_out'):
             ""
             )
 
-    # -----------------------------------------------------------
+    # ------------------------------
     #  Draw mAP plot (Show AP's of all classes in decreasing order)
-    # -----------------------------------------------------------
+    # ------------------------------
     if draw_plot:
         window_title    = "mAP"
         plot_title      = "mAP = {0:.2f}%".format(mAP*100)
@@ -949,7 +949,7 @@ def preprocess_dr(dr_path, class_names):
         image_id        = os.path.splitext(image_id)[0]
         for line in lines_list:
             line_split  = line.split()
-            confidence, left, top, right, bottom = line_split[-5:]
+            score, left, top, right, bottom = line_split[-5:]
             class_name  = ""
             for name in line_split[:-5]:
                 class_name += name + " "
@@ -959,7 +959,7 @@ def preprocess_dr(dr_path, class_names):
             result["image_id"]      = int(image_id)
             result["category_id"]   = class_names.index(class_name) + 1
             result["bbox"]          = [left, top, right - left, bottom - top]
-            result["score"]         = float(confidence)
+            result["score"]         = float(score)
             results.append(result)
     return results
  

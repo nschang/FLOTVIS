@@ -11,9 +11,9 @@ def compose(*funcs):
     else:
         raise ValueError('Composition of empty sequence not supported.')
 
-# -----------------------------------------------------------
+# ------------------------------
 # cv2 convert to RGB to prevent grayscale error at prediction
-# -----------------------------------------------------------
+# ------------------------------
 def cvtColor(image):
     if len(np.shape(image)) == 3 and np.shape(image)[-2] == 3:
         return image 
@@ -21,9 +21,9 @@ def cvtColor(image):
         image = image.convert('RGB')
         return image 
 
-# -----------------------------------------------------------
+# ------------------------------
 # resize input image
-# -----------------------------------------------------------
+# ------------------------------
 def resize_image(image, size, letterbox_image):
     iw, ih  = image.size
     w, h    = size
@@ -39,24 +39,24 @@ def resize_image(image, size, letterbox_image):
         new_image = image.resize((w, h), Image.BICUBIC)
     return new_image
 
-# -----------------------------------------------------------
+# ------------------------------
 # get class
-# -----------------------------------------------------------
+# ------------------------------
 def get_classes(classes_path):
-    # -----------------------------------------------------------
+    # ------------------------------
     # load class(es)
-    # -----------------------------------------------------------
+    # ------------------------------
     with open(classes_path, encoding='utf-8') as f:
         class_names = f.readlines()
     class_names = [c.strip() for c in class_names]
     return class_names, len(class_names)
-# -----------------------------------------------------------
+# ------------------------------
 # get anchor
-# -----------------------------------------------------------
+# ------------------------------
 def get_anchors(anchors_path):
-    # -----------------------------------------------------------
+    # ------------------------------
     # load anchors from file
-    # -----------------------------------------------------------
+    # ------------------------------
     with open(anchors_path, encoding='utf-8') as f:
         anchors = f.readline()
     anchors = [float(x) for x in anchors.split(',')]

@@ -49,27 +49,27 @@ h5py==2.10.0
 
 ```bash
 # predict single image
-$ python3 predict.py --mode='image' --img='test/test.jpg'
+$ python3 main.py --mode='image' --img='test/test.jpg'
 ```
 
 ```bash
 # predict all images in folder
-$ python3 predict.py --mode='batch' --imgdir='./test/'
+$ python3 main.py --mode='batch' --imgdir='./test/'
 ```
 
 ```bash
 # predict video
-$ python3 predict.py --mode='video' --vid='test/test.mp4'
+$ python3 main.py --mode='video' --vid='test/test.mp4'
 ```
 
 ```bash
 # predict using camera
-$ python3 predict.py --mode='camera'
+$ python3 main.py --mode='camera'
 ```
 
 ```bash
 # get FPS
-$ python3 predict.py --mode='fps'
+$ python3 main.py --mode='fps'
 ```
 
 ## Prepare Dataset
