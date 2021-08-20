@@ -10,8 +10,8 @@ from PIL import Image, ImageFont, ImageDraw
 
 from nets.yolo4 import yolo_body
 from utils.utils_anchors import yolo_process
-from utils.utils import (cvtColor, get_anchors, get_classes, preprocess_input,
-                         resize_image)
+from utils.utils import (cvtColor, get_anchors, get_classes, 
+                        preprocess_input, resize_image)
 
 class YOLO(object):
     _defaults = {
@@ -33,7 +33,7 @@ class YOLO(object):
         # max number of boxes
         "max_boxes"         : 100,
         # choose between (416,416) or (608,608) depending on RAM size
-        "model_image_size"  : (608, 608), # must be multiple of 32
+        "input_shape"  : (608, 608), # must be multiple of 32
         # -----------------------------------------------------------
         # toggle letterbox_image to resize input without distortion
         # effect UNTESTED
@@ -61,14 +61,15 @@ class YOLO(object):
         self.anchors, self.num_anchors        = get_anchors(self.anchors_path)
 
         # assign colors to boxes
-        hsv_tuples  = [(x / len(self.class_names), 1., 1.)
-                      for x in range(len(self.class_names))]
+        hsv_tuples  = [(x / self.num_classes, 1., 1.)
+                      for x in range(self.num_classes)]
         self.colors = list(map(lambda x: colorsys.hsv_to_rgb(*x), hsv_tuples))
         self.colors = list(map(lambda x: (int(x[0] * 255), 
                                           int(x[1] * 255), 
                                           int(x[2] * 255)),
-                                          self.color
+                                          self.colors
                                           ))
+        self.input_image_shape = K.placeholder(shape=(2, ))
 
         self.sess                             = K.get_session()
         self.boxes, self.scores, self.classes = self.generate()
@@ -80,19 +81,12 @@ class YOLO(object):
         assert model_path.endswith('.h5'), 'Keras model or weights must be a .h5 file.'
 
         # get class and number of anchor boxes
-        num_anchors = len(self.anchors)
-        num_classes = len(self.class_names)
+        # num_anchors = len(self.anchors)
+        # num_classes = self.num_classes
 
-        # load model if present, otherwise create model first
-        try:
-            self.yolo_model = load_model(model_path, compile=False)
-        except:
-            self.yolo_model = yolo_body(Input(shape=(None,None,3)), num_anchors//3, num_classes)
-            self.yolo_model.load_weights(self.model_path)
-        else:
-            assert self.yolo_model.layers[-1].output_shape[-1] == \
-                num_anchors/len(self.yolo_model.output) * (num_classes + 5), \
-                'Mismatch between model and given anchor and class sizes'
+        # load model
+        self.yolo_model = yolo_body([None, None, 3], self.anchors_mask, self.num_classes)
+        self.yolo_model.load_weights(self.model_path)
 
         print('{} model, anchors, and classes loaded.'.format(model_path))
 
@@ -100,8 +94,6 @@ class YOLO(object):
         np.random.seed(10101)
         np.random.shuffle(self.colors)
         np.random.seed(None)
-
-        self.input_image_shape = K.placeholder(shape=(2, ))
 
         # -----------------------------------------------------------
         # yolo_process handles post-processing of detection result
@@ -111,8 +103,9 @@ class YOLO(object):
         boxes, scores, classes  = yolo_process(
             self.yolo_model.output, 
             self.anchors,
-            num_classes, 
-            self.input_image_shape, 
+            self.num_classes,
+            self.input_image_shape,
+            self.input_shape,
             max_boxes       = self.max_boxes,
             score_threshold = self.score, 
             iou_threshold   = self.iou, 
@@ -154,7 +147,7 @@ class YOLO(object):
         font = ImageFont.truetype(font = font_path,
                      size=np.floor(3e-2 * image.size[1] + font_size).astype('int32'))
         # set thickness of prediction box
-        thickness = max((image.size[0] + image.size[1]) // 680, 1)
+        thickness = max((image.size[0] + image.size[1]) // 666, 1)
         # draw image
         for i, c in list(enumerate(out_classes)):
             predicted_class = self.class_names[int(c)]
@@ -200,7 +193,7 @@ class YOLO(object):
             # draw prediction on each object label
             draw.text(text_origin, str(label,'UTF-8'), fill=(0, 0, 0), font=font)
         # -----------------------------------------------------------
-        # draw sum of objects above original image
+        # draw sum of detected objects above original image
         # -----------------------------------------------------------
         # plastic count:
         # (0,0)------(w,0)
@@ -239,7 +232,7 @@ class YOLO(object):
         draw2.text((5, 0), 
         "plastic count: " + str(out_boxes.shape[0])
         + "    FPS: " + frame_per_second
-        + "    Inference time:" + inference_time + " seconds"
+        + "    Predicted in " + inference_time + " seconds"
         , (255, 255, 255), font=font)
         # -----------------------------------------------------------
         # IoU threshold = 50 %, used Area-Under-Curve for each unique Recall
