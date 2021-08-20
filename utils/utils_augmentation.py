@@ -20,7 +20,7 @@ class YoloDatasets(keras.utils.Sequence):
         self.train              = train
 
     def __len__(self):
-        return math.ceil(len(self.annotation_lines) / float(self.batch_size))
+        return np.ceil(len(self.annotation_lines) / float(self.batch_size))
 
     def __getitem__(self, index):
         image_data  = []
