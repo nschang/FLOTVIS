@@ -16,7 +16,7 @@ def _smooth_labels(y_true, label_smoothing):
 # --------------------------------------------------------------
 # convert layers of feature map to grount truth bounding box
 # --------------------------------------------------------------
-def yolo_head(feats, anchors, num_classes, input_shape, calc_loss=False):
+def yolo_anchor_decode(feats, anchors, num_classes, input_shape, calc_loss=False):
     num_anchors = len(anchors)
 
     # --------------------------------------------------------------
@@ -167,7 +167,7 @@ def yolo_loss(args,
         # pred_xy     (m,13,13,3,2)   decoded coordinate of center of box
         # pred_wh     (m,13,13,3,2)   decoded coordinate of width and height
         # --------------------------------------------------------------
-        grid, raw_pred, pred_xy, pred_wh = yolo_head(yolo_outputs[l],
+        grid, raw_pred, pred_xy, pred_wh = yolo_anchor_decode(yolo_outputs[l],
              anchors[anchor_mask[l]], num_classes, input_shape, calc_loss=True)
         
         # --------------------------------------------------------------

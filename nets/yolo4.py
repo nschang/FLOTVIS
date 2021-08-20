@@ -9,7 +9,7 @@ from keras.regularizers import l2 #
 from utils.utils import compose
 
 from nets.CSPdarknet53 import darknet_body, DarknetConv2D
-from nets.yolo_training import yolo_loss
+from nets.loss import yolo_loss
 
 # --------------------------------------------------------------
 # convolution blocks -> convolution + standardization + activation function

@@ -17,10 +17,12 @@ import cv2
 import numpy as np
 from tqdm import tqdm
 from PIL import Image
+
+from yolo import YOLO
+
 # from keras import backend as K
 # from keras.layers import Input
 # from keras.models import load_model
-from yolo import YOLO
 # from nets.yolo4 import yolo_body, yolo_process
 # from utils.utils import letterbox_image
 

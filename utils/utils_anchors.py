@@ -42,7 +42,7 @@ def yolo_correct_boxes(box_xy, box_wh, input_shape, image_shape, letterbox_image
 # --------------------------------------------------------------
 # get anchor and decode
 # --------------------------------------------------------------
-def yolo_anchor_decode(feats, anchors, num_classes, input_shape, calc_loss=False): # same as yolo_head
+def yolo_anchor_decode(feats, anchors, num_classes, input_shape, calc_loss=False): # same as yolo_anchor_decode
     num_anchors = len(anchors)
 
     # --------------------------------------------------------------
@@ -120,11 +120,11 @@ def yolo_process(yolo_outputs,
     # --------------------------------------------------------------
     # number of valid layers of feature map = 3
     # --------------------------------------------------------------
-    num_layers = len(yolo_outputs)
+    # num_layers = len(yolo_outputs)
     # --------------------------------------------------------------
     # size of input image = 416x416 or 608x608
     # --------------------------------------------------------------
-    input_shape = K.shape(yolo_outputs[0])[1:3] * 32
+    # input_shape = K.shape(yolo_outputs[0])[1:3] * 32
     # --------------------------------------------------------------
     # process each feature layer and stack results
     box_xy           = []
@@ -133,7 +133,7 @@ def yolo_process(yolo_outputs,
     box_class_scores = []
     for l in range(len(yolo_outputs)):
         sub_box_xy, sub_box_wh, sub_box_scores, sub_box_class_scores = \
-            yolo_head(yolo_outputs[l], anchors[anchor_mask[l]], num_classes, input_shape)
+            yolo_anchor_decode(yolo_outputs[l], anchors[anchor_mask[l]], num_classes, input_shape)
         box_xy.append(K.reshape(sub_box_xy, [-1, 2]))
         box_wh.append(K.reshape(sub_box_wh, [-1, 2]))
         box_scores.append(K.reshape(sub_box_scores, [-1, 1]))
