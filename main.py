@@ -28,13 +28,19 @@ from yolo import YOLO
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--img', type=str, default='./test/test.jpg')
-parser.add_argument('--imgdir', type=str, default='./test/')
-parser.add_argument('--vid', type=str, default='./test/test.mp4')
-parser.add_argument('--saveto', type=str, default='./video-predict/', help='path to save the video. Leave blank for no save.')
+parser.add_argument('--img', type=str, default='./test/test.jpg', help='specify image path')
+parser.add_argument('--imgdir', type=str, default='./test/', help='specify path to directory with images')
+parser.add_argument('--vid', type=str, default='./test/test.mp4',help='specify video path')
+parser.add_argument('--saveto', type=str, default='./video-predict/', help='path to save the video. No save if left blank.')
 parser.add_argument('--mode', type=str, default='image',
-                    choices=['image','batch','video','camera','fps'],
-                    help='mode: "image" to predict single image, "batch" to predict all images in folder, "video" for video prediction, "fps" returns the FPS value')
+                    choices=['summary','image','batch','video','camera','fps'],
+                    help='''
+                    "summary" produces summary of network architecture, 
+                    "image" predicts single image, 
+                    "batch" predicts all images in specified directory, 
+                    "video" predicts video, 
+                    "camera" predicts using camera feed, 
+                    "fps" returns the FPS value''')
 args = parser.parse_args()
 
 # this is the folder to save results
@@ -46,16 +52,31 @@ if __name__ == "__main__":
     #print("Dependencies loaded in --- %s seconds ---" % (time.time() - start_time)) # measurement
     timing.log
     mode = args.mode
-    # --------------------------------
+    # ------------------------------
     # '--mode=':
+    # 'summary' returns summary of network architecture
     # 'image'   to predict single image
     # 'batch'   to predict all images in folder
     # 'video'   for video prediction
     # 'camera'  to predict using camera
     # 'fps'     returns the FPS value
-    # --------------------------------
+    # ------------------------------
+#############SUMMARY##############
+    if mode == "summary":
+        if __name__ == "__main__":
+            from nets.yolo4 import yolo_body
+            input_shape     = [416, 416, 3]
+            anchors_mask    = [[6, 7, 8], [3, 4, 5], [0, 1, 2]]
+            num_classes     = 1
+            model           = yolo_body(input_shape, anchors_mask, num_classes)
+            model.summary()
+            # ------------------------------
+            # print out name of each layer
+            # ------------------------------
+            # for i,layer in enumerate(model.layers):
+            #     print(i,layer.name)
 #############IMAGE##############
-    if mode == "image":
+    elif mode == "image":
        while True:
            img     = args.img
            imgpath = Path(args.img)
@@ -81,11 +102,9 @@ if __name__ == "__main__":
                 r_image.save(os.path.join("./prediction/", image_id))
 #############VIDEO##############   
     elif mode == "video":
-        # --------------------------------------------------------------
-        # use ctrl+c to save video
-        # DO NOT exit directly after prediction
-        # --------------------------------------------------------------
+        # ------------------------------
         # specify video path
+        # ------------------------------
         video_path      = args.vid      # path of the video
         video_save_path = args.saveto   # path to save the video. video_save_path = "" means no save
         video_fps       = 60.0          # set fps of the output video
@@ -124,10 +143,10 @@ if __name__ == "__main__":
         cv2.destroyAllWindows()
 #############CAMERA##############   
     elif mode == "camera":
-        # --------------------------------------------------------------
+        # ------------------------------
         # use ctrl+c to save video
         # DO NOT exit directly after prediction
-        # --------------------------------------------------------------
+        # ------------------------------
         # specify video path
         video_path      = 0  # video_path=0 means detect using camera
         video_save_path = args.saveto     # path to save the video 
@@ -167,13 +186,13 @@ if __name__ == "__main__":
         cv2.destroyAllWindows()
 #############FPS##############
     elif mode == "fps":
-        # --------------------------------------------------------------
+        # ------------------------------
         # includes inference, score filtering, non-maximal suppression
-        # does NOT include pre-processing (normalization and resizing) and draw
+        # does NOT include pre-processing (batch normalization and resizing) and draw
         # default test using test/test.jpg
         # note that the FPS when using camera will be lower than this value
         # due to frame limites of camera and preprocessing and draw process
-        # --------------------------------------------------------------
+        # ------------------------------
         test_interval = 100
         img = args.img
         image = Image.open(img)
