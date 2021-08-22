@@ -1,3 +1,5 @@
 logs/
 train/
 prediction/
+VOCdevkit/VOC2007/Annotations
+VOCdevkit/VOC2007/JPEGImages
