@@ -1,5 +1,5 @@
 # ------------------------------
-# modify model_data/class.txt before running this !
+# first modify model_data/class.txt before running this !
 # otherwise you get a blank ./2007_train.txt
 # ------------------------------
 import xml.etree.ElementTree as ET

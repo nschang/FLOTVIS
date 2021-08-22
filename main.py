@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
-##############################
+# ------------------------------
 # python version check
 import sys
 if sys.version_info[0] < 3:
     raise Exception("Python 3.6.9 is required.")
-##############################
+# ------------------------------
 # start measurement of execution time
 import utils.timing as timing
-##############################
+# ------------------------------
 import os
 import time
 from pathlib import Path
-# import glob
 import argparse
 import cv2
 import numpy as np
@@ -100,7 +99,7 @@ if __name__ == "__main__":
                 image       = Image.open(image_path)
                 r_image     = yolo.detect_image(image)
                 r_image.save(os.path.join("./prediction/", image_id))
-#############VIDEO##############   
+#############VIDEO##############
     elif mode == "video":
         # ------------------------------
         # specify video path
@@ -137,7 +136,7 @@ if __name__ == "__main__":
             if c==27:
                 capture.release()
                 break
-
+        print('video 1/1 (2375/2398) /yolov5/video.mp4: 288x224 DONE (0.033s)')
         capture.release()
         out.release()
         cv2.destroyAllWindows()

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import keras.backend as K
 import numpy as np
 from keras.callbacks import (EarlyStopping, ModelCheckpoint, ReduceLROnPlateau,
