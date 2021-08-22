@@ -7,7 +7,7 @@ from keras.models import Model
 from keras.optimizers import Adam
 
 from nets.loss import yolo_loss
-from nets.yolo4 import yolo_body
+from nets.yolo_net import yolo_body
 from utils.utils import (LossHistory, WarmUpCosineDecayScheduler,
                          get_random_data, get_random_data_with_Mosaic, get_classes, get_anchors)
 from utils.utils_augmentation import YoloDatasets, preprocess_true_boxes

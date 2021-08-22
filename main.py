@@ -23,7 +23,7 @@ from yolo import YOLO
 # from keras import backend as K
 # from keras.layers import Input
 # from keras.models import load_model
-# from nets.yolo4 import yolo_body, yolo_process
+# from nets.yolo_net import yolo_body, yolo_process
 # from utils.utils import letterbox_image
 
 parser = argparse.ArgumentParser()
@@ -64,7 +64,7 @@ if __name__ == "__main__":
 #############SUMMARY##############
     if mode == "summary":
         if __name__ == "__main__":
-            from nets.yolo4 import yolo_body
+            from nets.yolo_net import yolo_body
             input_shape     = [416, 416, 3]
             anchors_mask    = [[6, 7, 8], [3, 4, 5], [0, 1, 2]]
             num_classes     = 1

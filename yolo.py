@@ -8,7 +8,7 @@ import numpy as np
 from keras import backend as K
 from PIL import Image, ImageFont, ImageDraw
 
-from nets.yolo4 import yolo_body
+from nets.yolo_net import yolo_body
 from utils.utils_anchors import yolo_process
 from utils.utils import (cvtColor, get_anchors, get_classes, 
                         preprocess_input, resize_image)

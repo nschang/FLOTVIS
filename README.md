@@ -22,7 +22,7 @@ FLOTVIS .
 │   ├── CSPdarknet53.py  
 │   ├── loss.py  
 │   ├── ious.py  
-│   └── yolo4.py  
+│   └── yolo_net.py  
 ├── test                    # dataset for testing  
 │   ├── test1.jpg  
 │   └── ...  
@@ -77,7 +77,7 @@ $ python3 main.py --mode='fps'
 - [LabelImg](https://github.com/tzutalin/labelImg) for creating ground truth bounding box
   default output in `.xml`  
   class(es): plastic  
-  YOLO4 data format: `class_number <x_center> <y_center> <width> <height>`  
+  yolo_net data format: `class_number <x_center> <y_center> <width> <height>`  
 
 ## Train
 
