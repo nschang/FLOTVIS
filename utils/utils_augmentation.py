@@ -83,7 +83,7 @@ class YoloDatasets(keras.utils.Sequence):
             new_image.paste(image, (dx, dy))
             image_data = np.array(new_image, np.float32)
 
-            # adjust ground truth bounding box
+            # decode ground truth bounding box
             box_data = np.zeros((max_boxes,5))
             if len(box) > 0:
                 np.random.shuffle(box)
@@ -100,7 +100,7 @@ class YoloDatasets(keras.utils.Sequence):
 
             return image_data, box_data
             
-        # zoom image and adjust width and length
+        # zoom image and decode height and width
         new_ar = w/h * self.rand(1-jitter,1+jitter) / self.rand(1-jitter,1+jitter)
         scale = self.rand(.25, 2)
         if new_ar < 1:
@@ -137,7 +137,7 @@ class YoloDatasets(keras.utils.Sequence):
         x[x<0] = 0
         image_data = cv2.cvtColor(x, cv2.COLOR_HSV2RGB)*255 # numpy array, 0 to 1
 
-        # adjust ground truth bounding box
+        # decode ground truth bounding box
         box_data = np.zeros((max_boxes,5))
         if len(box)>0:
             np.random.shuffle(box)
@@ -352,7 +352,7 @@ class YoloDatasets(keras.utils.Sequence):
         # process box
         new_boxes = self.merge_bboxes(box_datas, cutx, cuty)
 
-        # adjust ground truth bounding box
+        # decode ground truth bounding box
         box_data = np.zeros((max_boxes, 5))
         if len(new_boxes)>0:
             if len(new_boxes)>max_boxes: new_boxes = new_boxes[:max_boxes]

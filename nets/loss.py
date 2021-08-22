@@ -37,7 +37,7 @@ def yolo_anchor_decode(feats, anchors, num_classes, input_shape, calc_loss=False
     # ------------------------------
     anchors_tensor = K.tile(K.reshape(K.constant(anchors), [1, 1, num_anchors, 2]), [grid_shape[0], grid_shape[1], 1, 1])
     # ------------------------------
-    # adjust prediction to (batch_size,13,13,3,85)
+    # decode predicted box as (batch_size,13,13,3,85)
     # 85 = 4 + 1 + 80
     # where: 4  = parameter for width and height adjustment
     #           = center of box and width, height

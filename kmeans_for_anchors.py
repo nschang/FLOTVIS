@@ -25,10 +25,10 @@ def kmeans(box,k):
     # get number of boxes
     row = box.shape[0]
     
-    # get location of each point to each box
+    # get distance of each point to each box
     distance = np.empty((row,k))
     
-    # last cluster location
+    # last cluster position
     last_clu = np.zeros((row,))
 
     np.random.seed()
@@ -37,11 +37,11 @@ def kmeans(box,k):
     cluster = box[np.random.choice(row,k,replace = False)]
     # cluster = random.sample(row, k)
     while True:
-        # get iou of each row from the five points
+        # compute iou of each row from the five points
         for i in range(row):
             distance[i] = 1 - cas_iou(box[i],cluster)
         
-        # get minimum
+        # find minimum
         near = np.argmin(distance,axis=1)
 
         if (last_clu == near).all():
